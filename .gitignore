@@ -1,0 +1,10 @@
+# Ignorar todos los archivos de calc
+*.ods
+
+# Archivos temporales de bloqueo de LibreOffice
+.~lock.*.ods#
+.~lock.*.odb#
+
+# Archivos temporales comunes del sistema
+Thumbs.db
+.DS_Store
