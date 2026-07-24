@@ -1,47 +1,47 @@
 # Canban
 
-"Kanban Board" para LibreOffice Calc.
+"Kanban Board" for LibreOffice Calc.
 
-Este proyecto es una herramienta de organización visual y gestión de tareas en formato Kanban, desarrollada íntegramente dentro de **LibreOffice Calc** mediante programación en **Basic (StarBasic)** de la API de UNO.
+This project is a visual organization and task management tool in Kanban format, developed entirely within **LibreOffice Calc** using **Basic (StarBasic)** programming from the UNO API.
 
-El sistema esta diseñado bajo una separación de responsabilidades, que se divide en un tablero visual interactivo (Capa de Presentación) y un registro plano estructurado (Capa de Datos).
+The system is designed under a separation of concerns, which is divided into an interactive visual board (Presentation Layer) and a structured flat record (Data Layer).
 
-## Características
-- **Espacio de Trabajo Fluido y Ágil:** El tablero Kanban se actualiza e interactúa de forma inmediata al cambiar de proyecto o de columna de estado, ofreciendo una experiencia de uso ágil y sin retrasos, libre de las ralentizaciones habituales de las hojas de cálculo convencionales.
-- **Visualización Dinámica de Detalles:** Con solo hacer clic en cualquier tarea del tablero, el panel lateral muestra al instante su título completo y descripción detallada, permitiendo mantener las tarjetas del Kanban cortas, limpias y legibles.
-- **Captura e Interacción Intuitivas:** El formulario único para tareas se adapta visualmente al contexto de uso. Ofrece opciones simplificadas para la creación rápida y transforma sus colores y botones para alertar claramente al usuario en operaciones delicadas como el envío a la papelera o la eliminación definitiva.
-- **Seguridad y Trazabilidad de sus Tareas:** Cada tarea está vinculada a un registro único y persistente en la base de datos interna. Esto garantiza que las prioridades se puedan reorganizar, subir o bajar de nivel con total seguridad de que los textos y descripciones nunca se mezclarán ni se perderán.
-- **Separación de Operación y Configuración:** El sistema separa la rutina de organización diaria de la estructuración del espacio de trabajo. Mediante un panel de configuración dedicado, es posible añadir o dar de baja proyectos y columnas de forma centralizada sin interferir con la captura rápida de tareas.
-- **Enfoque Local y Privacidad Total:** La herramienta es 100% autocontenida y funciona completamente fuera de línea (offline). No requiere registros, cuentas en la nube ni dependencias externas; toda su información permanece resguardada de forma privada en su computadora.
+## Features
+- **Fluid and Agile Workspace:** The Kanban board updates and interacts immediately when changing projects or status columns, offering an agile, lag-free user experience, free from the usual slowdowns of conventional spreadsheets.
+- **Dynamic Detail Visualization:** By simply clicking on any task on the board, the side panel instantly displays its full title and detailed description, allowing the Kanban cards to be kept short, clean, and readable.
+- **Intuitive Capture and Interaction:** The single task form visually adapts to the context of use. It offers simplified options for rapid creation and transforms its colors and buttons to clearly alert the user during sensitive operations such as sending to the trash or permanent deletion.
+- **Security and Traceability of Your Tasks:** Each task is linked to a unique and persistent record in the internal database. This ensures that priorities can be reorganized, moved up, or moved down with complete certainty that texts and descriptions will never be mixed up or lost.
+- **Separation of Operation and Configuration:** The system separates the daily organization routine from the workspace structuring. Through a dedicated configuration panel, it is possible to centrally add or remove projects and columns without interfering with quick task capture.
+- **Local Approach and Total Privacy:** The tool is 100% self-contained and works completely offline. It requires no registrations, cloud accounts, or external dependencies; all your information remains privately secured on your computer.
 
-Este proyecto tiene como objetivo ofrecer una alternativa local, ligera, personalizable y orientada a la privacidad para la gestión ágil de proyectos directos, sin depender de servicios web externos ni bases de datos de terceros.
+This project aims to offer a local, lightweight, customizable, and privacy-oriented alternative for the agile management of straightforward projects, without relying on external web services or third-party databases.
 
-## Cómo empezar (Instalación)
-1. Descarga el archivo `canban.ods` de este repositorio.
-2. Abre el archivo con LibreOffice Calc.
-3. Si aparece un mensaje indicando que las macros están desactivadas, consulta la sección de **Seguridad de Macros** más abajo.
+## Getting Started (Installation)
+1. Download the `canban.ods` file from this repository.
+2. Open the file with LibreOffice Calc.
+3. If a message appears indicating that macros are disabled, refer to the **Macro Security** section below.
 
-## Seguridad de Macros
-Para que las macros funcionen correctamente en tu equipo:
-1. En LibreOffice, ve a **Herramientas > Opciones > LibreOffice > Seguridad**.
-2. Haz clic en **Seguridad de macros > Orígenes de confianza**.
-3. Añade la carpeta donde descargaste este archivo a la lista de **Fuentes de confianza** (recomendado), o bien establece el nivel de seguridad en **Medio**.
+## Macro Security
+For macros to work correctly on your computer:
+1. In LibreOffice, go to **Tools > Options > LibreOffice > Security**.
+2. Click on **Macro Security > Trusted Sources**.
+3. Add the folder where you downloaded this file to the **Trusted Sources** list (recommended), or set the security level to **Medium**.
 
-## Comandos Fundamentales
-1. **Desactive los menus** de libreoffice calc con el comando `Ctrl + Alt + Q`.
-2. Para **agregar una nueva tarea**, utilice el comando `Ctrl + Alt + N`.
-3. Parar **editar una tarea existente**, utilice el comando `Ctrl + Alt + U`.
-4. Para **agregar/eliminar un estado**, utilice el comando `Ctrl + Alt + E`.
-5. Para **agregar/eliminar una actividad**, utilice el comando `Ctrl + Alt + A`.
-6. Para **enviar a la papelera una tarea**, utilice el comando `Ctrl + Alt + P`.
-7. Para **eliminar(borrar permanentemente) una tarea**, utilice el comando `Ctrl + Alt + D`.
+## Fundamental Commands
+1. **Disable the menus** in LibreOffice Calc using the `Ctrl + Alt + Q` shortcut.
+2. To **add a new task**, use the `Ctrl + Alt + N` shortcut.
+3. To **edit an existing task**, use the `Ctrl + Alt + U` shortcut.
+4. To **add/remove a status**, use the `Ctrl + Alt + E` shortcut.
+5. To **add/remove an activity**, use the `Ctrl + Alt + A` shortcut.
+6. To **send a task to the trash**, use the `Ctrl + Alt + P` shortcut.
+7. To **delete (permanently erase) a task**, use the `Ctrl + Alt + D` shortcut.
 
 
-## Cómo contribuir o modificar las macros
-Si deseas realizar cambios en el código:
-1. El código fuente de las macros se encuentra en la carpeta `src/macros.bas`.
-2. Puedes hacer modificaciones directamente en el editor de Basic de LibreOffice Calc.
-3. Al finalizar, recuerda exportar el módulo modificado y reemplazar el archivo `src/macros.bas` para mantener el repositorio actualizado.
+## How to Contribute or Modify Macros
+If you wish to make changes to the code:
+1. The macro source code is located in the `src/macros.bas` file.
+2. You can make modifications directly in the LibreOffice Calc Basic editor.
+3. When finished, remember to export the modified module and replace the `src/macros.bas` file to keep the repository updated.
 
-## Licencia
-Este proyecto está bajo la Licencia MIT - ver el archivo `LICENSE` para más detalles.
+## License
+This project is licensed under the MIT License - see the `LICENSE` file for details.
