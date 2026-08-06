@@ -516,111 +516,111 @@ Sub AssignMissingIdsBD()
     Dim oDoc As Object, oData As Object
     Dim oCursor As Object
     Dim TotalRows As Long, i As Long
-    Dim sActivity As String, sTarea As String, sState As String
-    Dim idActual As Long, nuevoId As Long
-    Dim conteoAsignados As Long
+    Dim sActivity As String, sTask As String, sState As String
+    Dim idActual As Long, NewId As Long
+    Dim AssignedCount As Long
     
     oDoc = ThisComponent
     oData = oDoc.Sheets.getByName("data")
-    conteoAsignados = 0
+    AssignedCount = 0
     
-    ' Desactivar actualización de pantalla para procesar en milisegundos
+    ' Disable screen updating for millisecond processing.
     oDoc.addActionLock()
     
     oCursor = oData.createCursor()
     oCursor.gotoEndOfUsedArea(False)
     TotalRows = oCursor.RangeAddress.EndRow + 1
     
-    ' Recorrer desde la fila 2 (índice 1) en adelante
+    ' Iterate from row 2 (index 1) onwards.
     For i = 1 To TotalRows - 1
-        ' Leer campos obligatorios de validación
+        ' Read mandatory validation fields
         sActivity = Trim(oData.getCellByPosition(0, i).String) ' Col A
-        sTarea = Trim(oData.getCellByPosition(1, i).String)     ' Col B
+        sTask = Trim(oData.getCellByPosition(1, i).String)     ' Col B
         sState = Trim(oData.getCellByPosition(2, i).String)    ' Col C
         idActual = oData.getCellByPosition(5, i).Value          ' Col F
         
-        ' REGLA DE VALIDACIÓN:
-        ' Si tiene Actividad, Tarea y Estado (Campos llenos) Y el ID es 0 o está vacío
-        If sActivity <> "" And sTarea <> "" And sState <> "" And idActual = 0 Then
+        ' VALIDATION RULE:
+        ' If Activity, Task, and Status are present (fields populated) AND the ID is 0 or empty.
+        If sActivity <> "" And sTask <> "" And sState <> "" And idActual = 0 Then
             
-            ' Consultar el siguiente ID disponible (reutilizando huecos si existen)
-            nuevoId = GetNextAvailableId()
+            ' Check the next available ID (reusing gaps if any exist)
+            NewId = GetNextAvailableId()
             
-            ' Inyectar el ID en la Columna F
-            oData.getCellByPosition(5, i).Value = nuevoId
-            conteoAsignados = conteoAsignados + 1
+            ' Inject the ID into Column F
+            oData.getCellByPosition(5, i).Value = NewId
+            AssignedCount = AssignedCount + 1
         End If
     Next i
     
     oDoc.removeActionLock()
     
-    ' Mensaje sutil de confirmación si se ejecutó manualmente y asignó algo
-    If conteoAsignados > 0 Then
-        MsgBox "Se han auditado los registros. IDs asignados con éxito: " & conteoAsignados, 64, "Mantenimiento de IDs"
+    ' Subtle confirmation message if executed manually and something was assigned.
+    If AssignedCount > 0 Then
+        MsgBox "The records have been audited. IDs successfully assigned.: " & AssignedCount, 64, "ID Maintenance"
     End If
 End Sub
 
 REM =========================================================================
-REM PROCESO AISLADO: INYECTAR TÍTULO (D3) Y DESCRIPCIÓN (D4) EN EL VISOR
+REM ISOLATED PROCESS: INJECT TITLE (D3) AND DESCRIPTION (D4) INTO THE VIEWER
 REM =========================================================================
 Sub RunInjectionDescription(oVisor As Object, idBusqueda As Long)
     Dim oDoc As Object, oData As Object, oCursor As Object
     Dim TotalRowsData As Long, i As Long
-    Dim sDescripcion As String
+    Dim sDescription As String
     
     oDoc = ThisComponent
     oData = oDoc.Sheets.getByName("data")
     
-    ' 1. Limpiar la columna D por completo antes de pintar (Solo la celda D4, al ser un rango combinado)
-    ' Esto garantiza que no queden "fantasmas" visuales de celdas anteriores
+    ' 1. Clear column D completely before painting (only cell D4, as it is a merged range).
+    ' This ensures that no visual "ghosts" of previous cells remain.
     oVisor.getCellByPosition(3, 3).String = ""
-    oVisor.getCellByPosition(3, 2).String = "" ' Celda D3 (índice Columna 3, Fila 2)
+    oVisor.getCellByPosition(3, 2).String = "" 
     
-    ' 2. Si el ID es 0 (celda vacía), dejamos limpio y salimos
+    ' 2. If the ID is 0 (empty cell), clear the field and exit.
     If idBusqueda = 0 Then Exit Sub
     
-    ' 3. Buscar la descripción en la base de datos por ID
+    ' 3. Search for the description in the database by ID.
     oCursor = oData.createCursor()
     oCursor.gotoEndOfUsedArea(False)
     TotalRowsData = oCursor.RangeAddress.EndRow + 1
     
-    sTitulo = ""
-    sDescripcion = ""
+    sTitle = ""
+    sDescription = ""
     For i = 1 To TotalRowsData - 1
         If CLng(oData.getCellByPosition(5, i).Value) = idBusqueda Then
-            sDescripcion = oData.getCellByPosition(3, i).String ' Columna D de Datos
-            sTitulo = oData.getCellByPosition(1, i).String      ' Columna B (índice 1 - Título/Tarea)
+            sDescription = oData.getCellByPosition(3, i).String ' Column D
+            sTitle = oData.getCellByPosition(1, i).String      ' Column B
             Exit For
         End If
     Next i
     
-    ' 4. Escribir el resultado en el Visor
-    oVisor.getCellByPosition(3, 2).String = sTitulo       ' Escribe en D3 (Título)
-    oVisor.getCellByPosition(3, 3).String = sDescripcion
+    ' 4. Write the result in the Viewer.
+    oVisor.getCellByPosition(3, 2).String = sTitle
+    oVisor.getCellByPosition(3, 3).String = sDescription
 End Sub
 
 REM =========================================================================
-REM MOTOR ÚNICO DE PRIORIDADES: VERSIÓN ÍNDICE SECUENCIAL GLOBAL (F2 PRO)
+REM UNIQUE PRIORITY ENGINE: GLOBAL SEQUENTIAL INDEX VERSION (F2 PRO)
 REM =========================================================================
-Function ObtenerSiguienteOrden(sActivity As String, sState As String, Optional nPosDeseada As Long) As Double
+Function GetNextOrder(sActivity As String, sState As String, Optional nPosWanted As Long) As Double
     Dim oDoc As Object, oData As Object, oCursor As Object
-    Dim TotalRowsActuales As Long, i As Long
+    Dim CurrentTotalRows As Long, i As Long
     
     oDoc = ThisComponent
     oData = oDoc.Sheets.getByName("data")
     
     oCursor = oData.createCursor()
     oCursor.gotoEndOfUsedArea(False)
-    TotalRowsActuales = oCursor.RangeAddress.EndRow + 1
+    CurrentTotalRows = oCursor.RangeAddress.EndRow + 1
     
-    If IsMissing(nPosDeseada) Then nPosDeseada = 0
+    If IsMissing(nPosWanted) Then nPosWanted = 0
     
     ' =========================================================================
-    ' ESCENARIO A: INTERPOLACIÓN GLOBAL DENTRO DEL KANBAN
+    ' SCENARIO A: GLOBAL INTERPOLATION WITHIN KANBAN
     ' =========================================================================
-    If nPosDeseada > 0 Then
+    If nPosWanted > 0 Then
         Dim mHistorico() As Variant, oRangoTareas As Object
-        oRangoTareas = oData.getCellRangeByPosition(0, 1, 4, TotalRowsActuales - 1)
+        oRangoTareas = oData.getCellRangeByPosition(0, 1, 4, CurrentTotalRows - 1)
         mHistorico = oRangoTareas.getDataArray()
         
         ' Filtramos para ubicar los índices globales de las tareas de este grupo específico
@@ -635,18 +635,18 @@ Function ObtenerSiguienteOrden(sActivity As String, sState As String, Optional n
         
         If cFiltrados > 0 Then
             ' Determinar los pesos globales en la columna E basados en la posición deseada
-            If nPosDeseada <= 1 Then
+            If nPosWanted <= 1 Then
                 ' Al principio del grupo: Peso de la primera tarea del grupo menos 0.1
-                ObtenerSiguienteOrden = CDbl(mHistorico(mIndicesGlobales(0))(4)) - 0.1
-            ElseIf nPosDeseada > cFiltrados Then
+                GetNextOrder = CDbl(mHistorico(mIndicesGlobales(0))(4)) - 0.1
+            ElseIf nPosWanted > cFiltrados Then
                 ' Al final del grupo: Peso de la última tarea del grupo más 0.1
-                ObtenerSiguienteOrden = CDbl(mHistorico(mIndicesGlobales(cFiltrados - 1))(4)) + 0.1
+                GetNextOrder = CDbl(mHistorico(mIndicesGlobales(cFiltrados - 1))(4)) + 0.1
             Else
                 ' En medio: Punto medio decimal entre la tarea elegida y la anterior
                 Dim ordenAnterior As Double, ordenSiguiente As Double
-                ordenAnterior = CDbl(mHistorico(mIndicesGlobales(nPosDeseada - 2))(4))
-                ordenSiguiente = CDbl(mHistorico(mIndicesGlobales(nPosDeseada - 1))(4))
-                ObtenerSiguienteOrden = ordenAnterior + ((ordenSiguiente - ordenAnterior) / 2)
+                ordenAnterior = CDbl(mHistorico(mIndicesGlobales(nPosWanted - 2))(4))
+                ordenSiguiente = CDbl(mHistorico(mIndicesGlobales(nPosWanted - 1))(4))
+                GetNextOrder = ordenAnterior + ((ordenSiguiente - ordenAnterior) / 2)
             End If
             Exit Function
         End If
@@ -656,10 +656,10 @@ Function ObtenerSiguienteOrden(sActivity As String, sState As String, Optional n
     ' ESCENARIO B: CONSECUTIVO AL FINAL ABSOLUTO DE LA TABLA
     ' =========================================================================
     ' Si la tabla está vacía (solo cabecera), inicia en 1, sino va al final de la list corrida
-    If TotalRowsActuales <= 2 Then
-        ObtenerSiguienteOrden = 1.0
+    If CurrentTotalRows <= 2 Then
+        GetNextOrder = 1.0
     Else
-        ObtenerSiguienteOrden = CDbl(TotalRowsActuales)
+        GetNextOrder = CDbl(CurrentTotalRows)
     End If
 End Function
 
@@ -698,7 +698,7 @@ Sub AssignMissingOrdersBD()
                 
                 ' Solicitamos al componente experto el siguiente número entero para este grupo
                 ' Nota: No pasamos el tercer parámetro porque queremos que vaya al final de su list
-                nOrdenAsignado = ObtenerSiguienteOrden(sActivity, sState)
+                nOrdenAsignado = GetNextOrder(sActivity, sState)
                 
                 ' Inyectamos el valor curado en la base de datos
                 oCeldaOrden.Value = nOrdenAsignado
@@ -1110,7 +1110,7 @@ Sub GuardarDatosDesdeDialogo(oDialogo As Object, IdTask As Long)
     Dim oModel As Object, oCursor As Object
     Dim nRowDestino As Long
     Dim TotalRows As Long, i As Long
-    Dim nuevoId As Long
+    Dim NewId As Long
     Dim binEsNuevo As Boolean
     
     ' 1. Carga de entorno
@@ -1133,8 +1133,8 @@ Sub GuardarDatosDesdeDialogo(oDialogo As Object, IdTask As Long)
         nRowDestino = oCursor.RangeAddress.EndRow + 1
         
         ' Calcular el nuevo ID disponible únicamente en memoria
-        nuevoId = GetNextAvailableId()
-        IdTask = nuevoId
+        NewId = GetNextAvailableId()
+        IdTask = NewId
     Else
         ' --- ESCENARIO B: EDICIÓN DE TAREA EXISTENTE ---
         binEsNuevo = False
@@ -1250,26 +1250,26 @@ REM =========================================================================
 REM SERVICIO EXTERNO 3: GUARDAR TÍTULO EN LA BASE DE DATOS
 REM =========================================================================
 Sub ServGuardarTxtTitulo(oControlView As Object, oData As Object, nRowDestino As Long)
-    Dim sTitulo As String
+    Dim sTitle As String
     
     ' Extraer el texto limpio del cuadro de texto (TextField)
-    sTitulo = Trim(oControlView.Text)
+    sTitle = Trim(oControlView.Text)
     
     ' Escribir el valor en la Columna B (índice 1) de la fila correspondiente
-    oData.getCellByPosition(1, nRowDestino).String = sTitulo
+    oData.getCellByPosition(1, nRowDestino).String = sTitle
 End Sub
 
 REM =========================================================================
 REM SERVICIO EXTERNO 4: GUARDAR DESCRIPCIÓN EN LA BASE DE DATOS
 REM =========================================================================
 Sub ServGuardarTxtDescripcion(oControlView As Object, oData As Object, nRowDestino As Long)
-    Dim sDescripcion As String
+    Dim sDescription As String
     
     ' Extraer el texto del cuadro de descripción (admite formato multilínea)
-    sDescripcion = Trim(oControlView.Text)
+    sDescription = Trim(oControlView.Text)
     
     ' Escribir el valor en la Columna D (índice 3) de la fila correspondiente
-    oData.getCellByPosition(3, nRowDestino).String = sDescripcion
+    oData.getCellByPosition(3, nRowDestino).String = sDescription
 End Sub
 
 REM =========================================================================
@@ -1290,10 +1290,10 @@ Sub ServGuardarNumPosicion(oControlView As Object, oData As Object, nRowDestino 
     ' 3. Evaluar la entrada y solicitar el peso al motor de prioridades
     If LCase(sPosText) = "f" Or sPosText = "" Or Not IsNumeric(sPosText) Then
         ' Caso "F", vacío o entrada inválida: Colocar al final absoluto del grupo
-        nOrdenCalculado = ObtenerSiguienteOrden(sActivity, sState, 0)
+        nOrdenCalculado = GetNextOrder(sActivity, sState, 0)
     Else
         ' Caso numérico: Interpolar la posición en medio de la list de tareas
-        nOrdenCalculado = ObtenerSiguienteOrden(sActivity, sState, CLng(sPosText))
+        nOrdenCalculado = GetNextOrder(sActivity, sState, CLng(sPosText))
     End If
     
     ' 4. Guardar el peso decimal en la Columna E (índice 4)
@@ -1312,7 +1312,7 @@ Sub ServGuardarNumPosicionPorDefecto(oData As Object, nRowDestino As Long, oMode
     sState = oData.getCellByPosition(2, nRowDestino).String
     
     ' 2. Solicitar un orden al final de su respectiva list
-    nOrdenCalculado = ObtenerSiguienteOrden(sActivity, sState, 0)
+    nOrdenCalculado = GetNextOrder(sActivity, sState, 0)
     
     ' 3. Escribir en la Columna E (índice 4)
     oData.getCellByPosition(4, nRowDestino).Value = nOrdenCalculado
