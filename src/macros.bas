@@ -17,8 +17,8 @@ Sub ToggleInterface
         oLayout.setVisible(False)
     Else
         oLayout.setVisible(True)
-    End If
-End Sub
+    Ind If
+Ind Sub
 
 
 REM =========================================================================
@@ -56,13 +56,13 @@ Sub DrawingBoard()
     If sActivity = "" Then
         oDoc.removeActionLock()
         Exit Sub
-    End If
+    Ind If
     
     ' 4. Determine the size of the database
     Dim oCursor As Object
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRowsData = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRowsData = oCursor.RangeAddress.IndRow + 1
     
     ' Initialize write pointers for the Viewer (Start at row 4 -> index 3)
     CurrentRowA = 3
@@ -86,16 +86,16 @@ Sub DrawingBoard()
                 oVisor.getCellByPosition(0, CurrentRowA).String = sRegTask
                 oVisor.getCellByPosition(4, CurrentRowA).Value = IdTask ' Safe ID in Column E
                 CurrentRowA = CurrentRowA + 1
-            End If
+            Ind If
                 
 	    ' Does it belong to the second State (Column B of the View)?
             If sRegState = sStateB And CurrentRowB <= 299 Then
                 oVisor.getCellByPosition(1, CurrentRowB).String = sRegTask
                 oVisor.getCellByPosition(5, CurrentRowB).Value = IdTask ' Safe ID in Column E
                 CurrentRowB = CurrentRowB + 1
-            End If
+            Ind If
             
-        End If
+        Ind If
     Next i
     
     ' 6. Release screen lock and refresh
@@ -116,11 +116,11 @@ Sub DrawingBoard()
         
 	' Also update debug cell E1
         oVisor.getCellByPosition(4, 0).Value = IdCurrentFocus
-    End If
+    Ind If
     ' -----------------------------------------------------------------------
     
     oDoc.calculateAll()
-End Sub
+Ind Sub
 
 REM =========================================================================
 REM --- OPTIMIZED DATA SORTING ENGINE ---
@@ -141,8 +141,8 @@ Sub CustomDataSort()
     
     ' 2. Find the actual row limit in the post-curing data sheet
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRowsData = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRowsData = oCursor.RangeAddress.IndRow + 1
     
     ' If only the headers are there or it's empty, we can leave safely.
     If TotalRowsData <= 2 Then Exit Sub
@@ -198,7 +198,7 @@ Sub CustomDataSort()
                 temporal = DataMatrix(i)
                 DataMatrix(i) = DataMatrix(j)
                 DataMatrix(j) = temporal
-            End If
+            Ind If
         Next j
     Next i
     
@@ -215,7 +215,7 @@ Sub CustomDataSort()
             ' IF THE ROW IS EMPTY (GHOST): We clear any residual numeric data from memory
             DataMatrix(i)(4) = "" ' Delete the Order (Col E)
             DataMatrix(i)(5) = "" ' Delete the ID (Col F)
-        End If
+        Ind If
     Next i
     ' =========================================================================
     
@@ -224,7 +224,7 @@ Sub CustomDataSort()
     
     ' 7. Automatic synchronization: Redraw the Kanban canvas of the Viewer
     DrawingBoard()
-End Sub
+Ind Sub
 
 REM =========================================================================
 REM AUXILIARY FUNCTION: SEARCH FOR THE WEIGHT/INDEX WITHIN THE REFERENCE LISTS
@@ -238,13 +238,13 @@ Function GetListIndex(sValue As String, ByRef list() As Variant) As Long
             If Trim(LCase(list(i)(0))) = sValue Then
                 GetListIndex = i ' Returns the physical position (0, 1, 2...) as its priority level
                 Exit Function
-            End If
-        End If
+            Ind If
+        Ind If
     Next i
     
     ' If for any reason the activity/status is not in list H or J, it is assigned the lowest priority.
     GetListIndex = 999 
-End Function
+Ind Function
 
 
 
@@ -267,13 +267,13 @@ Sub RunCascadeDelete(sItem As String, sTypeItem As String)
                                "This could alter the default display of the columns." & Chr(13) & _
                                "Do you want to continue anyway?", 4 + 32, "Baseline State Validation")
             If answer <> 6 Then Exit Sub
-        End If
-    End If
+        Ind If
+    Ind If
     
     ' 2. Finding database limits
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.IndRow + 1
     
     ' 3. Count affected tasks
     For i = 1 To TotalRows - 1
@@ -282,11 +282,11 @@ Sub RunCascadeDelete(sItem As String, sTypeItem As String)
             sValueCompare = oData.getCellByPosition(0, i).String ' Column A
         Else
             sValueCompare = oData.getCellByPosition(2, i).String ' Column C
-        End If
+        Ind If
         
         If sValueCompare = sItem Then
             TaskCounter = TaskCounter + 1
-        End If
+        Ind If
     Next i
     
     ' 4. Critical and irreversible safety confirmation
@@ -305,11 +305,11 @@ Sub RunCascadeDelete(sItem As String, sTypeItem As String)
                 sValueCompare2 = oData.getCellByPosition(0, i).String
             Else
                 sValueCompare2 = oData.getCellByPosition(2, i).String
-            End If
+            Ind If
             
             If LCase(Trim(sValueCompare2)) = LCase(Trim(sItem)) Then
                 oData.Rows.removeByIndex(i, 1)
-            End If
+            Ind If
         Next i
         
         ' B. Delete the item from the configuration catalog
@@ -320,7 +320,7 @@ Sub RunCascadeDelete(sItem As String, sTypeItem As String)
                 If LCase(Trim(mCatAct(i)(0))) = LCase(Trim(sItem)) Then
                     oData.getCellByPosition(7, i + 1).String = "" ' Column H (índice 7)
                     Exit For
-                End If
+                Ind If
             Next i
         Else
             Dim mCatEst() As Variant
@@ -329,9 +329,9 @@ Sub RunCascadeDelete(sItem As String, sTypeItem As String)
                 If LCase(Trim(mCatEst(i)(0))) = LCase(Trim(sItem)) Then
                     oData.getCellByPosition(9, i + 1).String = "" ' Column J (índice 9)
                     Exit For
-                End If
+                Ind If
             Next i
-        End If
+        Ind If
         
         ' C. Reorder and redraw the Kanban board
         CustomDataSort()
@@ -340,8 +340,8 @@ Sub RunCascadeDelete(sItem As String, sTypeItem As String)
         oDoc.calculateAll()
         
         MsgBox sTypeItem & " and their tasks have been purged from the database.", 64, "Purge Completed"
-    End If
-End Sub
+    Ind If
+Ind Sub
 
 
 
@@ -357,12 +357,12 @@ Sub StartListenerSeleccion()
     ' Create the selection event listener object
     oSeleccionListener = CreateUnoListener("VisorSeleccion_", "com.sun.star.view.XSelectionChangeListener")
     oDoc.CurrentController.addSelectionChangeListener(oSeleccionListener)
-End Sub
+Ind Sub
 
 Sub RemoveListenerSeleccion()
     On Error Resume Next
     ThisComponent.CurrentController.removeSelectionChangeListener(oSeleccionListener)
-End Sub
+Ind Sub
 
 
 REM =========================================================================
@@ -380,11 +380,11 @@ Function GetIdFromPosition(oVisor As Object, nRow As Long, nColumn As Long) As L
         ElseIf nColumn = 1 Then
             ' Column B (1) -> Read ID Column F (5)
             IdFound = CLng(oVisor.getCellByPosition(5, nRow).Value)
-        End If
-    End If
+        Ind If
+    Ind If
     
     GetIdFromPosition = IdFound
-End Function
+Ind Function
 
 REM =========================================================================
 REM ULTRA-SIMPLIFIED LISTENER FOR ID LINK TESTING
@@ -422,7 +422,7 @@ Sub VisorSeleccion_selectionChanged(oEvent)
     
     ' Refresh screen subtly
     oDoc.calculateAll()
-End Sub
+Ind Sub
 
 REM =========================================================================
 REM SHEET EVENT: CONTENT MODIFIED ON THE VIEWER SHEET (KANBAN REFRESH)
@@ -439,9 +439,9 @@ Sub Visor_onContentChanged(oEvent As Object)
     nCol = oEvent.CellAddress.Column
     
     ' 2. EVALUATE CRITICAL FILTERING COORDINATES:
-    ' - A2 (Fila 1, Col 0) o C2 (Fila 1, Col 2) -> Active Activity Filter
-    ' - A3 (Fila 2, Col 0) -> Left State Filter (Column A)
-    ' - B3 (Fila 2, Col 1) -> Right-of-State Filter (Column B)
+    ' - A2 (Row 1, Col 0) o C2 (Row 1, Col 2) -> Active Activity Filter
+    ' - A3 (Row 2, Col 0) -> Left State Filter (Column A)
+    ' - B3 (Row 2, Col 1) -> Right-of-State Filter (Column B)
     If (nRow = 1 And (nCol = 0 Or nCol = 2)) Or _
        (nRow = 2 And nCol = 0) Or _
        (nRow = 2 And nCol = 1) Then
@@ -455,8 +455,8 @@ Sub Visor_onContentChanged(oEvent As Object)
                 
         ' Reactivate the selection listener once the redraw is complete.
         binFrozenFocus = False
-    End If
-End Sub
+    Ind If
+Ind Sub
 
 REM =========================================================================
 REM PHASE 2 - COMPONENT 1: GAP FINDER AND AVAILABLE ID GENERATOR
@@ -473,14 +473,14 @@ Function GetNextAvailableId() As Long
     
     ' Finding the actual limit of the data sheet
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.IndRow + 1
     
     ' If there are no data rows (header only), the first ID is 1
     If TotalRows <= 2 Then
         GetNextAvailableId = 1
         Exit Function
-    End If
+    Ind If
     
     ' LOGIC FOR REUSING GAPS:
     ' We start testing from ID = 1 upwards.
@@ -493,20 +493,20 @@ Function GetNextAvailableId() As Long
             If CLng(oData.getCellByPosition(5, i).Value) = IdCandidate Then
                 IdExists = True
                 Exit For ' It's already taken, there's no need to keep looking this time.
-            End If
+            Ind If
         Next i
         
         ' If it didn't exist, we've found a gap or the end of the sequence!
         If Not IdExists Then
             Exit Do
-        End If
+        Ind If
         
         ' If it existed, we tried the next number
         IdCandidate = IdCandidate + 1
     Loop
     
     GetNextAvailableId = IdCandidate
-End Function
+Ind Function
 
 
 REM =========================================================================
@@ -517,7 +517,7 @@ Sub AssignMissingIdsBD()
     Dim oCursor As Object
     Dim TotalRows As Long, i As Long
     Dim sActivity As String, sTask As String, sState As String
-    Dim idActual As Long, NewId As Long
+    Dim idCurrent As Long, NewId As Long
     Dim AssignedCount As Long
     
     oDoc = ThisComponent
@@ -528,8 +528,8 @@ Sub AssignMissingIdsBD()
     oDoc.addActionLock()
     
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.IndRow + 1
     
     ' Iterate from row 2 (index 1) onwards.
     For i = 1 To TotalRows - 1
@@ -537,11 +537,11 @@ Sub AssignMissingIdsBD()
         sActivity = Trim(oData.getCellByPosition(0, i).String) ' Col A
         sTask = Trim(oData.getCellByPosition(1, i).String)     ' Col B
         sState = Trim(oData.getCellByPosition(2, i).String)    ' Col C
-        idActual = oData.getCellByPosition(5, i).Value          ' Col F
+        idCurrent = oData.getCellByPosition(5, i).Value          ' Col F
         
         ' VALIDATION RULE:
         ' If Activity, Task, and Status are present (fields populated) AND the ID is 0 or empty.
-        If sActivity <> "" And sTask <> "" And sState <> "" And idActual = 0 Then
+        If sActivity <> "" And sTask <> "" And sState <> "" And idCurrent = 0 Then
             
             ' Check the next available ID (reusing gaps if any exist)
             NewId = GetNextAvailableId()
@@ -549,7 +549,7 @@ Sub AssignMissingIdsBD()
             ' Inject the ID into Column F
             oData.getCellByPosition(5, i).Value = NewId
             AssignedCount = AssignedCount + 1
-        End If
+        Ind If
     Next i
     
     oDoc.removeActionLock()
@@ -557,8 +557,8 @@ Sub AssignMissingIdsBD()
     ' Subtle confirmation message if executed manually and something was assigned.
     If AssignedCount > 0 Then
         MsgBox "The records have been audited. IDs successfully assigned.: " & AssignedCount, 64, "ID Maintenance"
-    End If
-End Sub
+    Ind If
+Ind Sub
 
 REM =========================================================================
 REM ISOLATED PROCESS: INJECT TITLE (D3) AND DESCRIPTION (D4) INTO THE VIEWER
@@ -581,8 +581,8 @@ Sub RunInjectionDescription(oVisor As Object, idBusqueda As Long)
     
     ' 3. Search for the description in the database by ID.
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRowsData = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRowsData = oCursor.RangeAddress.IndRow + 1
     
     sTitle = ""
     sDescription = ""
@@ -591,13 +591,13 @@ Sub RunInjectionDescription(oVisor As Object, idBusqueda As Long)
             sDescription = oData.getCellByPosition(3, i).String ' Column D
             sTitle = oData.getCellByPosition(1, i).String      ' Column B
             Exit For
-        End If
+        Ind If
     Next i
     
     ' 4. Write the result in the Viewer.
     oVisor.getCellByPosition(3, 2).String = sTitle
     oVisor.getCellByPosition(3, 3).String = sDescription
-End Sub
+Ind Sub
 
 REM =========================================================================
 REM UNIQUE PRIORITY ENGINE: GLOBAL SEQUENTIAL INDEX VERSION (F2 PRO)
@@ -610,8 +610,8 @@ Function GetNextOrder(sActivity As String, sState As String, Optional nPosWanted
     oData = oDoc.Sheets.getByName("data")
     
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    CurrentTotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    CurrentTotalRows = oCursor.RangeAddress.IndRow + 1
     
     If IsMissing(nPosWanted) Then nPosWanted = 0
     
@@ -619,482 +619,482 @@ Function GetNextOrder(sActivity As String, sState As String, Optional nPosWanted
     ' SCENARIO A: GLOBAL INTERPOLATION WITHIN KANBAN
     ' =========================================================================
     If nPosWanted > 0 Then
-        Dim mHistorico() As Variant, oRangoTareas As Object
-        oRangoTareas = oData.getCellRangeByPosition(0, 1, 4, CurrentTotalRows - 1)
-        mHistorico = oRangoTareas.getDataArray()
+        Dim mHistoric() As Variant, oTaskRange As Object
+        oTaskRange = oData.getCellRangeByPosition(0, 1, 4, CurrentTotalRows - 1)
+        mHistoric = oTaskRange.getDataArray()
         
-        ' Filtramos para ubicar los índices globales de las tareas de este grupo específico
-        Dim mIndicesGlobales() As Long, cFiltrados As Long : cFiltrados = 0
-        For i = 0 To UBound(mHistorico)
-            If Trim(mHistorico(i)(0)) = sActivity And Trim(mHistorico(i)(2)) = sState Then
-                ReDim Preserve mIndicesGlobales(cFiltrados)
-                mIndicesGlobales(cFiltrados) = i ' Guardamos la posición física de la fila
-                cFiltrados = cFiltrados + 1
-            End If
+        ' We filter to locate the global indices for the tasks of this specific group
+        Dim mGlobalIndices() As Long, cFiltered As Long : cFiltered = 0
+        For i = 0 To UBound(mHistoric)
+            If Trim(mHistoric(i)(0)) = sActivity And Trim(mHistoric(i)(2)) = sState Then
+                ReDim Preserve mGlobalIndices(cFiltered)
+                mGlobalIndices(cFiltered) = i ' We store the physical position of the row
+                cFiltered = cFiltered + 1
+            Ind If
         Next i
         
-        If cFiltrados > 0 Then
-            ' Determinar los pesos globales en la columna E basados en la posición deseada
+        If cFiltered > 0 Then
+            ' Determine the global weights in column E based on the desired position
             If nPosWanted <= 1 Then
-                ' Al principio del grupo: Peso de la primera tarea del grupo menos 0.1
-                GetNextOrder = CDbl(mHistorico(mIndicesGlobales(0))(4)) - 0.1
-            ElseIf nPosWanted > cFiltrados Then
-                ' Al final del grupo: Peso de la última tarea del grupo más 0.1
-                GetNextOrder = CDbl(mHistorico(mIndicesGlobales(cFiltrados - 1))(4)) + 0.1
+                ' At the start of the group: Weight of the first group task minus 0.1
+                GetNextOrder = CDbl(mHistoric(mGlobalIndices(0))(4)) - 0.1
+            ElseIf nPosWanted > cFiltered Then
+                ' At the end of the group: Weight of the last group task plus 0.1
+                GetNextOrder = CDbl(mHistoric(mGlobalIndices(cFiltered - 1))(4)) + 0.1
             Else
-                ' En medio: Punto medio decimal entre la tarea elegida y la anterior
-                Dim ordenAnterior As Double, ordenSiguiente As Double
-                ordenAnterior = CDbl(mHistorico(mIndicesGlobales(nPosWanted - 2))(4))
-                ordenSiguiente = CDbl(mHistorico(mIndicesGlobales(nPosWanted - 1))(4))
-                GetNextOrder = ordenAnterior + ((ordenSiguiente - ordenAnterior) / 2)
-            End If
+                ' In between: Decimal midpoint between the chosen task and the previous one
+                Dim PreviousOrder As Double, NextOrder As Double
+                PreviousOrder = CDbl(mHistoric(mGlobalIndices(nPosWanted - 2))(4))
+                NextOrder = CDbl(mHistoric(mGlobalIndices(nPosWanted - 1))(4))
+                GetNextOrder = PreviousOrder + ((NextOrder - PreviousOrder) / 2)
+            Ind If
             Exit Function
-        End If
-    End If
+        Ind If
+    Ind If
     
     ' =========================================================================
-    ' ESCENARIO B: CONSECUTIVO AL FINAL ABSOLUTO DE LA TABLA
+    ' SCENARIO B: CONSECUTIVE AT THE VERY END OF THE TABLE
     ' =========================================================================
-    ' Si la tabla está vacía (solo cabecera), inicia en 1, sino va al final de la list corrida
+    ' If the table is empty (header only), start at 1; otherwise, go to the end of the list
     If CurrentTotalRows <= 2 Then
         GetNextOrder = 1.0
     Else
         GetNextOrder = CDbl(CurrentTotalRows)
-    End If
-End Function
+    Ind If
+Ind Function
 
 REM =========================================================================
-REM COMPONENTE DEFENSIVO: REPARA Y ASIGNA NÚMEROS DE ORDEN FALTANTES (F2)
+REM DEFENSIVE COMPONENT: REPAIRS AND ASSIGNS MISSING SEQUENCE NUMBERS (F2)
 REM =========================================================================
 Sub AssignMissingOrdersBD()
     Dim oDoc As Object, oData As Object, oCursor As Object
     Dim TotalRowsData As Long, i As Long
     Dim sActivity As String, sState As String
-    Dim oCeldaOrden As Object
-    Dim nOrdenAsignado As Double
+    Dim oOrderCell As Object
+    Dim nAssignedOrder As Double
     
     oDoc = ThisComponent
     oData = oDoc.Sheets.getByName("data")
     
-    ' 1. Encontrar el límite real de filas en la hoja datos
+    ' 1. Find the actual limit of rows in the "datos" sheet.
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRowsData = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRowsData = oCursor.RangeAddress.IndRow + 1
     
-    ' Si sólo están las cabeceras, no hay nada que auditar
+    ' If only the headers are present, there is nothing to audit
     If TotalRowsData <= 2 Then Exit Sub
     
-    ' 2. Barrido fila por fila analizando la columna E (índice 4)
+    ' 2. Scanning row by row, analyzing column E (index 4)
     For i = 1 To TotalRowsData - 1
         sActivity = Trim(oData.getCellByPosition(0, i).String) ' Col A
         sState = Trim(oData.getCellByPosition(2, i).String)    ' Col C
-        oCeldaOrden = oData.getCellByPosition(4, i)             ' Col E
+        oOrderCell = oData.getCellByPosition(4, i)             ' Col E
         
-        ' Una fila es válida si al menos tiene Actividad y Nombre de Tarea
+        ' A row is valid if it has at least an Activity and a Task Name
         If sActivity <> "" And Trim(oData.getCellByPosition(1, i).String) <> "" Then
             
-            ' Detectar si el orden es nulo, vacío o cero
-            If oCeldaOrden.Type = com.sun.star.table.CellContentType.EMPTY Or oCeldaOrden.Value = 0 Then
+            ' Detect whether the order is null, empty, or zero
+            If oOrderCell.Type = com.sun.star.table.CellContentType.EMPTY Or oOrderCell.Value = 0 Then
                 
-                ' Solicitamos al componente experto el siguiente número entero para este grupo
-                ' Nota: No pasamos el tercer parámetro porque queremos que vaya al final de su list
-                nOrdenAsignado = GetNextOrder(sActivity, sState)
+                ' We ask the expert component for the next integer for this group
+                ' Note: We do not pass the third parameter because we want it to go to the end of its list.
+                nAssignedOrder = GetNextOrder(sActivity, sState)
                 
-                ' Inyectamos el valor curado en la base de datos
-                oCeldaOrden.Value = nOrdenAsignado
+                ' We inject the curated value into the database
+                oOrderCell.Value = nAssignedOrder
                 
-            End If
-        End If
+            Ind If
+        Ind If
     Next i
-End Sub
+Ind Sub
 
 REM =========================================================================
-REM HUB CENTRAL DE SERVICIOS AUTÓNOMO PARA DIÁLOGOS (ESTRUCTURA ATÓMICA)
+REM AUTONOMOUS CENTRAL SERVICE HUB FOR DIALOGUES (ATOMIC STRUCTURE)
 REM =========================================================================
-Sub InicializarServiciosDialogo(oDialogo As Object, idActivo As Long)
+Sub InitializeDialogServices(oDialogue As Object, IdActive As Long)
     Dim oDoc As Object, oVisor As Object, oData As Object
     Dim oModel As Object, oSel As Object
     
-    ' 1. CARGA DE ENTORNO GLOBAL (Siempre se usará)
+    ' 1. GLOBAL ENVIRONMENT LOADING (Always used)
     oDoc = ThisComponent
     oVisor = oDoc.Sheets.getByName("view")
     oData = oDoc.Sheets.getByName("data")
-    oModel = oDialogo.Model
+    oModel = oDialogue.Model
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO DE VISIBILIDAD DINÁMICA: MOSTRAR/OCULTAR BOTONES DE ACCIÓN
+    REM DYNAMIC VISIBILITY SERVICE: SHOW/HIDE ACTION BUTTONS
     REM ---------------------------------------------------------------------
-    ' Si es alta nueva (idActivo = 0), ocultamos los botones de destrucción física y lógica
-    If oModel.hasByName("BtnEliminar") Then
-        oDialogo.getControl("BtnEliminar").setVisible(idActivo > 0)
-    End If
+    ' If it is a new record (IdActive = 0), we hide the physical and logical deletion buttons
+    If oModel.hasByName("BtnDelete") Then
+        oDialogue.getControl("BtnDelete").setVisible(IdActive > 0)
+    Ind If
     
-    If oModel.hasByName("BtnPapelera") Then
-        oDialogo.getControl("BtnPapelera").setVisible(idActivo > 0)
-    End If
+    If oModel.hasByName("BtnTrash") Then
+        oDialogue.getControl("BtnTrash").setVisible(IdActive > 0)
+    Ind If
     
-    ' Desactivar actualización de pantalla por rendimiento general
+    ' Disable screen updates for general performance
     oDoc.addActionLock()
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO 1: POBLAR COMBO DE ACTIVIDADES
+    REM SERVICE 1: POPULATE ACTIVITIES COMBO BOX
     REM ---------------------------------------------------------------------
-    If oModel.hasByName("CmbActividad") Then
-        ' Pasamos el modelo y la vista por separado a la macro externa
-        Call ServPoblarCmbActividad(oModel.getByName("CmbActividad"), oDialogo.getControl("CmbActividad"), oData, idActivo)
-    End If
+    If oModel.hasByName("CmbActivity") Then
+        ' We pass the model and the view separately to the external macro
+        Call ServPopulateCmbActivity(oModel.getByName("CmbActivity"), oDialogue.getControl("CmbActivity"), oData, IdActive)
+    Ind If
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO 2: POBLAR COMBO DE ESTADOS
+    REM SERVICE 2: POPULATE STATES COMBO BOX
     REM ---------------------------------------------------------------------
-    If oModel.hasByName("CmbEstado") Then
-        ' Pasamos el modelo y la vista por separado a la macro externa
-        Call ServPoblarCmbEstado(oModel.getByName("CmbEstado"), oDialogo.getControl("CmbEstado"), oData, idActivo)
-    End If
+    If oModel.hasByName("CmbState") Then
+        ' We pass the model and the view separately to the external macro
+        Call ServPopulateCmbState(oModel.getByName("CmbState"), oDialogue.getControl("CmbState"), oData, IdActive)
+    Ind If
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO 3: INYECTAR TÍTULO (Contextual al ID Activo o Selección)
+    REM SERVICE 3: INJECT TITLE (Contextual to Active ID or Selection)
     REM ---------------------------------------------------------------------
-    If oModel.hasByName("TxtTitulo") Then
-        Dim oCtrlTitulo As Object
-        oCtrlTitulo = oModel.getByName("TxtTitulo")
-        ' Limpio y atómico: Solo se encarga del texto del título
-        Call ServGestionarTxtTitulo(oCtrlTitulo, idActivo, oData)
-    End If
+    If oModel.hasByName("TxtTitle") Then
+        Dim oCtrlTitle As Object
+        oCtrlTitle = oModel.getByName("TxtTitle")
+        ' Clean and atomic: It only handles the title text.
+        Call ServManageTxtTitle(oCtrlTitle, IdActive, oData)
+    Ind If
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO 4: INYECTAR DESCRIPCIÓN
+    REM SERVICE 4: INSERT DESCRIPTION
     REM ---------------------------------------------------------------------
-    If oModel.hasByName("TxtDescripcion") Then
+    If oModel.hasByName("TxtDescription") Then
         Dim oCtrlDesc As Object
-        oCtrlDesc = oModel.getByName("TxtDescripcion")
-        Call ServGestionarTxtDescripcion(oCtrlDesc, idActivo, oData)
-    End If
+        oCtrlDesc = oModel.getByName("TxtDescription")
+        Call ServManageTxtDescription(oCtrlDesc, IdActive, oData)
+    Ind If
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO 5: CALCULAR Y ASIGNAR POSICIÓN RELATIVA
+    REM SERVICE 5: CALCULATE AND ASSIGN RELATIVE POSITION
     REM ---------------------------------------------------------------------
-    If oModel.hasByName("NumPosicion") Then
-        ' Enviamos modelo y vista por separado
-        Call ServCalcularNumPosicion(oModel.getByName("NumPosicion"), oDialogo.getControl("NumPosicion"), idActivo, oData, oModel)
-    End If
+    If oModel.hasByName("NumPosition") Then
+        ' We are sending the model and the view separately
+        Call ServCalculateNumPosition(oModel.getByName("NumPosition"), oDialogue.getControl("NumPosition"), IdActive, oData, oModel)
+    Ind If
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO 6 (UNIFICADO): POBLAR COMBO DE BORRADO DE ITEMS (CmbItem)
+    REM SERVICE 6 (UNIFIED): POPULATE ITEM DELETION COMBO BOX (CmbItem)
     REM ---------------------------------------------------------------------
     If oModel.hasByName("CmbItem") Then
         Dim sTypeItem As String : sTypeItem = ""
-        ' Detectar dinámicamente el contexto por el título de la ventana
-        If InStr(LCase(oDialogo.Title), "actividad") > 0 Then
+        ' Dynamically detect the context based on the window title.
+        If InStr(LCase(oDialogue.Title), "activity") > 0 Then
             sTypeItem = "Activity"
-        ElseIf InStr(LCase(oDialogo.Title), "estado") > 0 Then
+        ElseIf InStr(LCase(oDialogue.Title), "state") > 0 Then
             sTypeItem = "State"
-        End If
+        Ind If
         
-        Call ServPoblarCmbItem(oModel.getByName("CmbItem"), oDialogo.getControl("CmbItem"), oData, sTypeItem)
-    End If
+        Call ServPopulateCmbItem(oModel.getByName("CmbItem"), oDialogue.getControl("CmbItem"), oData, sTypeItem)
+    Ind If
     
-    ' Reactivar actualización de pantalla
+    ' Reactivate screen update
     oDoc.removeActionLock()
-End Sub
+Ind Sub
 
 REM =========================================================================
-REM SERVICIO EXTERNO 1: POBLAR Y SELECCIONAR ACTIVIDAD (VISTA)
+REM EXTERNAL SERVICE 1: POPULATE AND SELECT activity (VIEW)
 REM =========================================================================
-Sub ServPoblarCmbActividad(oModelCombo As Object, oControlView As Object, oData As Object, idActivo As Long)
-    Dim  oCursor As Object
+Sub ServPopulateCmbActivity(oModelCombo As Object, oControlView As Object, oData As Object, IdActive As Long)
+    Dim oCursor As Object
     Dim TotalRows As Long, i As Long
-    Dim sValue As String, sActivityBuscar As String
-    Dim vlist() As String, nContador As Long : nContador = 0
-    Dim idxActividad As Long : idxActividad = -1
+    Dim sValue As String, sActivitySearch As String
+    Dim vlist() As String, nCounter As Long : nCounter = 0
+    Dim idxActivity As Long : idxActivity = -1
     
     oModelCombo = oControlView.Model
     
-    ' 1. Cargar datos en el Array
+    ' 1. Load data into the array
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.IndRow + 1
     ReDim vlist(TotalRows)
     
     For i = 1 To TotalRows - 1
         sValue = Trim(oData.getCellByPosition(7, i).String)
         If sValue <> "" Then
-            vlist(nContador) = sValue
-            nContador = nContador + 1
-        End If
+            vlist(nCounter) = sValue
+            nCounter = nCounter + 1
+        Ind If
     Next i
     
-    ' 2. Inyectar la list al modelo
-    If nContador > 0 Then
-        ReDim Preserve vlist(nContador - 1)
+    ' 2. Inject the list into the model
+    If nCounter > 0 Then
+        ReDim Preserve vlist(nCounter - 1)
         oModelCombo.StringItemList = vlist()
     Else
-        Dim vVacio(0) As String
-        oModelCombo.StringItemList = vVacio()
+        Dim vEmpty(0) As String
+        oModelCombo.StringItemList = vEmpty()
         Exit Sub
-    End If
+    Ind If
     
-    ' 3. PRE-SELECCIÓN MEDIANTE TU PROPUESTA DE VISTA (.selectItemPos)
-    If idActivo > 0 Then
+    ' 3. Pre-selection via this proposal (.selectItemPos)
+    If IdActive > 0 Then
         For i = 1 To TotalRows - 1
-            If oData.getCellByPosition(5, i).Value = idActivo Then
-                sActivityBuscar = oData.getCellByPosition(0, i).String
+            If oData.getCellByPosition(5, i).Value = IdActive Then
+                sActivitySearch = oData.getCellByPosition(0, i).String
                 Exit For
-            End If
+            Ind If
         Next i
         
         For i = 0 To UBound(oModelCombo.StringItemList)
-            If oModelCombo.StringItemList(i) = sActivityBuscar Then
-                idxActividad = i
+            If oModelCombo.StringItemList(i) = sActivitySearch Then
+                idxActivity = i
                 Exit For
-            End If
+            Ind If
         Next i
         
-        If idxActividad <> -1 Then
-            ' Método nativo e infalible para forzar el texto visual en la Vista de un ComboBox
-            oControlView.setText(sActivityBuscar)
-        End If
-    End If
-End Sub
+        If idxActivity <> -1 Then
+            ' Native and foolproof method to force the visual text in a ComboBox's view
+            oControlView.setText(sActivitySearch)
+        Ind If
+    Ind If
+Ind Sub
 
 REM =========================================================================
-REM SERVICIO EXTERNO 2: POBLAR Y SELECCIONAR ESTADO (VISTA)
+REM EXTERNAL SERVICE 2: POPULATE AND SELECT STATE (VIEW)
 REM =========================================================================
-Sub ServPoblarCmbEstado(oModelCombo As Object, oControlView As Object, oData As Object, idActivo As Long)
+Sub ServPopulateCmbState(oModelCombo As Object, oControlView As Object, oData As Object, IdActive As Long)
     Dim oCursor As Object
     Dim TotalRows As Long, i As Long
-    Dim sValue As String, sStateBuscar As String
-    Dim vlist() As String, nContador As Long : nContador = 0
-    Dim idxEstado As Long : idxEstado = -1
+    Dim sValue As String, sStateSearch As String
+    Dim vlist() As String, nCounter As Long : nCounter = 0
+    Dim idxState As Long : idxState = -1
     
     oModelCombo = oControlView.Model
     
-    ' 1. Cargar datos en el Array
+    ' 1. Load data into the array
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.IndRow + 1
     ReDim vlist(TotalRows)
     
     For i = 1 To TotalRows - 1
         sValue = Trim(oData.getCellByPosition(9, i).String)
-        If sValue <> "" And LCase(sValue) <> "Papelera" Then
-            vlist(nContador) = sValue
-            nContador = nContador + 1
-        End If
+        If sValue <> "" And LCase(sValue) <> "Trash" Then
+            vlist(nCounter) = sValue
+            nCounter = nCounter + 1
+        Ind If
     Next i
     
-    ' 2. Inyectar la list al modelo
-    If nContador > 0 Then
-        ReDim Preserve vlist(nContador - 1)
+    ' 2. Inject the list into the model
+    If nCounter > 0 Then
+        ReDim Preserve vlist(nCounter - 1)
         oModelCombo.StringItemList = vlist()
     Else
-        Dim vVacio(0) As String
-        oModelCombo.StringItemList = vVacio()
+        Dim vEmpty(0) As String
+        oModelCombo.StringItemList = vEmpty()
         Exit Sub
-    End If
+    Ind If
     
-    ' 3. PRE-SELECCIÓN MEDIANTE TU PROPUESTA DE VISTA (.selectItemPos)
-    If idActivo > 0 Then
+    ' 3. Pre-selection via your view proposal (.selectItemPos)
+    If IdActive > 0 Then
         For i = 1 To TotalRows - 1
-            If oData.getCellByPosition(5, i).Value = idActivo Then
-                sStateBuscar = oData.getCellByPosition(2, i).String
+            If oData.getCellByPosition(5, i).Value = IdActive Then
+                sStateSearch = oData.getCellByPosition(2, i).String
                 Exit For
-            End If
+            Ind If
         Next i
         
         For i = 0 To UBound(oModelCombo.StringItemList)
-            If oModelCombo.StringItemList(i) = sStateBuscar Then
-                idxEstado = i
+            If oModelCombo.StringItemList(i) = sStateSearch Then
+                idxState = i
                 Exit For
-            End If
+            Ind If
         Next i
         
-        If idxEstado <> -1 Then
-            ' Método nativo e infalible para forzar el texto visual en la Vista de un ComboBox
-            oControlView.setText(sStateBuscar)
-        End If
-    End If
-End Sub
+        If idxState <> -1 Then
+            ' Native and foolproof method to force the visual text in a ComboBox's view.
+            oControlView.setText(sStateSearch)
+        Ind If
+    Ind If
+Ind Sub
 
 REM =========================================================================
-REM SERVICIO EXTERNO 3: GESTIONAR TÍTULO DE LA TAREA (ATÓMICO)
+REM EXTERNAL SERVICE 3: MANAGE TASK TITLE (ATOMIC)
 REM =========================================================================
-Sub ServGestionarTxtTitulo(oModelTitulo As Object, idActivo As Long, oData As Object)
+Sub ServManageTxtTitle(oModelTitle As Object, IdActive As Long, oData As Object)
     Dim oCursor As Object
     Dim TotalRows As Long, i As Long
     
-    ' Si el ID es 0, es un alta nueva; limpiamos el título y salimos
-    If idActivo = 0 Then
-        oModelTitulo.Text = ""
+    ' If the ID is 0, it is a new entry; we clear the title and exit
+    If IdActive = 0 Then
+        oModelTitle.Text = ""
         Exit Sub
-    End If
+    Ind If
     
-    ' Buscamos la fila de la tarea en la hoja datos
+    ' We look for the task row on the data sheet
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.IndRow + 1
     
     For i = 1 To TotalRows - 1
-        ' Columna F (Índice 5) contiene el ID de la tarea
-        If oData.getCellByPosition(5, i).Value = idActivo Then
-            ' Inyectar únicamente el título actual (Columna B, Índice 1)
-            oModelTitulo.Text = oData.getCellByPosition(1, i).String
+        ' Column F (Index 5) contains the task ID.
+        If oData.getCellByPosition(5, i).Value = IdActive Then
+            ' Inject only the current title (Column B, Index 1)
+            oModelTitle.Text = oData.getCellByPosition(1, i).String
             Exit Sub
-        End If
+        Ind If
     Next i
-End Sub
+Ind Sub
 
 REM =========================================================================
 REM SERVICIO EXTERNO 4: GESTIONAR DESCRIPCIÓN DE LA TAREA
 REM =========================================================================
-Sub ServGestionarTxtDescripcion(oModelDesc As Object, idActivo As Long, oData As Object)
+Sub ServManageTxtDescription(oModelDesc As Object, IdActive As Long, oData As Object)
     Dim oCursor As Object
     Dim TotalRows As Long, i As Long
     
-    ' Si el ID es 0, es una tarea nueva; dejamos la descripción limpia
-    If idActivo = 0 Then
+    ' If the ID is 0, it is a new task; we leave the description blank
+    If IdActive = 0 Then
         oModelDesc.Text = ""
         Exit Sub
-    End If
+    Ind If
     
-    ' Buscamos la fila de la tarea para extraer la descripción
+    ' We are looking for the task row to extract the description
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.IndRow + 1
     
     For i = 1 To TotalRows - 1
-        ' Columna F (Índice 5) contiene el ID de la tarea
-        If oData.getCellByPosition(5, i).Value = idActivo Then
-            ' Columna D (Índice 3) contiene la Descripción
+        ' Column F (Index 5) contains the task ID.
+        If oData.getCellByPosition(5, i).Value = IdActive Then
+            ' Column D (Index 3) contains the description
             oModelDesc.Text = oData.getCellByPosition(3, i).String
             Exit Sub
-        End If
+        Ind If
     Next i
-End Sub
+Ind Sub
 
 REM =========================================================================
-REM SERVICIO EXTERNO 5: GENERAR MAPA DE POSICIONES VISUALES (CORREGIDO)
+REM EXTERNAL SERVICE 5: GENERATE VISUAL POSITION MAP (CORRECTED)
 REM =========================================================================
-Sub ServCalcularNumPosicion(oModelCombo As Object, oControlView As Object, idActivo As Long, oData As Object, oModelDialogo As Object)
+Sub ServCalculateNumPosition(oModelCombo As Object, oControlView As Object, IdActive As Long, oData As Object, oModelDialogo As Object)
     Dim oCursor As Object
     Dim TotalRows As Long, i As Long
-    Dim sStateTarea As String, sActivityTarea As String
-    Dim nTotalEnEstado As Long : nTotalEnEstado = 0
-    Dim nPosicionActual As Long : nPosicionActual = 0
+    Dim sStateTask As String, sActivityTask As String
+    Dim nTotalInState As Long : nTotalInState = 0
+    Dim nPositionCurrent As Long : nPositionCurrent = 0
     Dim vlist() As String
     
-    ' 1. Determinar el contexto de ACTIVIDAD y ESTADO en el que opera la tarea
+    ' 1. Determine the activity and STATE context in which the task operates
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.IndRow + 1
     
-    If idActivo = 0 Then
-        ' Si es nueva tarea, leemos los combos del diálogo
-        If oModelDialogo.hasByName("CmbActividad") Then sActivityTarea = Trim(oModelDialogo.getByName("CmbActividad").Text)
-        If oModelDialogo.hasByName("CmbEstado") Then sStateTarea = Trim(oModelDialogo.getByName("CmbEstado").Text)
+    If IdActive = 0 Then
+        ' If it is a new task, we read the dialog options
+        If oModelDialogo.hasByName("CmbActivity") Then sActivityTask = Trim(oModelDialogo.getByName("CmbActivity").Text)
+        If oModelDialogo.hasByName("CmbState") Then sStateTask = Trim(oModelDialogo.getByName("CmbState").Text)
         
-        ' Valuees por defecto si están vacíos
-        If sActivityTarea = "" Then sActivityTarea = "General"
-        If sStateTarea = "" Then sStateTarea = "To do"
+        ' Default values if empty
+        If sActivityTask = "" Then sActivityTask = "General"
+        If sStateTask = "" Then sStateTask = "To do"
     Else
-        ' Si la tarea existe, extraemos su Actividad (Col A) y Estado (Col C) reales de la fila
+        ' If the task exists, we extract its actual Activity (Col A) and State (Col C) from the row
         For i = 1 To TotalRows - 1
-            If oData.getCellByPosition(5, i).Value = idActivo Then
-                sActivityTarea = oData.getCellByPosition(0, i).String ' Col A
-                sStateTarea    = oData.getCellByPosition(2, i).String ' Col C
+            If oData.getCellByPosition(5, i).Value = IdActive Then
+                sActivityTask = oData.getCellByPosition(0, i).String ' Col A
+                sStateTask    = oData.getCellByPosition(2, i).String ' Col C
                 Exit For
-            End If
+            Ind If
         Next i
-    End If
+    Ind If
     
-    ' 2. Contar de forma precisa (Filtrando por Actividad + Estado y omitiendo filas basura)
-    Dim sEstFila As String, sActFila As String
+    ' 2. Count accurately (filtering by Activity + State and omitting junk rows)
+    Dim sEstRow As String, sActRow As String
     
     For i = 1 To TotalRows - 1
-        sActFila = Trim(oData.getCellByPosition(0, i).String)
-        sEstFila = Trim(oData.getCellByPosition(2, i).String)
+        sActRow = Trim(oData.getCellByPosition(0, i).String)
+        sEstRow = Trim(oData.getCellByPosition(2, i).String)
         
-        ' REGLA DE ORO: Deben coincidir Actividad Y Estado, y NO ser papelera ni estar vacíos
-        If sActFila = sActivityTarea And sEstFila = sStateTarea And LCase(sEstFila) <> "Papelera" And sActFila <> "" Then
-            nTotalEnEstado = nTotalEnEstado + 1
+        ' GOLDEN RULE: Activity and State must match, and must NOT be 'Trash' or empty
+        If sActRow = sActivityTask And sEstRow = sStateTask And LCase(sEstRow) <> "Trash" And sActRow <> "" Then
+            nTotalInState = nTotalInState + 1
             
-            ' Si encontramos el ID que estamos buscando, guardamos su posición exacta en este subconjunto
-            If idActivo > 0 Then
-                If oData.getCellByPosition(5, i).Value = idActivo Then
-                    nPosicionActual = nTotalEnEstado
-                End If
-            End If
-        End If
+            ' If we find the ID we are looking for, we store its exact position within this subset
+            If IdActive > 0 Then
+                If oData.getCellByPosition(5, i).Value = IdActive Then
+                    nPositionCurrent = nTotalInState
+                Ind If
+            Ind If
+        Ind If
     Next i
     
-    ' 3. Construir la list de opciones del Combo basadas en el conteo real
-    Dim nLimiteOpciones As Long
-    nLimiteOpciones = nTotalEnEstado
+    ' 3. Build the combo box option list based on the actual count
+    Dim nLimitOptions As Long
+    nLimitOptions = nTotalInState
     
-    ' Creamos el array para los enteros (1, 2, 3...) más la opción "F"
-    ReDim vlist(nLimiteOpciones)
+    ' We create the array for the integers (1, 2, 3...) plus the "F" option.
+    ReDim vlist(nLimitOptions)
     
-    For i = 1 To nLimiteOpciones
+    For i = 1 To nLimitOptions
         vlist(i - 1) = CStr(i)
     Next i
-    vlist(nLimiteOpciones) = "F"
+    vlist(nLimitOptions) = "F"
     
-    ' Inyectamos la list limpia de posiciones
+    ' We inject the clean list of positions
     oModelCombo.StringItemList = vlist()
     
-    ' 4. Preselección visual con el método setText sobre la Vista
-    If idActivo = 0 Then
+    ' 4. Visual pre-selection using the setText method on the View
+    If IdActive = 0 Then
         oControlView.setText("F")
     Else
-        If nPosicionActual > 0 Then
-            oControlView.setText(CStr(nPosicionActual))
+        If nPositionCurrent > 0 Then
+            oControlView.setText(CStr(nPositionCurrent))
         Else
             oControlView.setText("F")
-        End If
-    End If
-End Sub
+        Ind If
+    Ind If
+Ind Sub
 
 REM =========================================================================
-REM SERVICIO EXTERNO 6: POBLAR COMBO UNIFICADO DE ITEMS (VISTA)
+REM EXTERNAL SERVICE 6: POPULATE UNIFIED ITEM COMBO (VIEW)
 REM =========================================================================
-Sub ServPoblarCmbItem(oModelCombo As Object, oControlView As Object, oData As Object, sTypeItem As String)
+Sub ServPopulateCmbItem(oModelCombo As Object, oControlView As Object, oData As Object, sTypeItem As String)
     Dim oCursor As Object
-    Dim TotalRows As Long, i As Long, nContador As Long
+    Dim TotalRows As Long, i As Long, nCounter As Long
     Dim sValue As String
     Dim vlist() As String
     
     oModelCombo = oControlView.Model
     
-    ' Obtener límites en la hoja datos
+    ' Get limits on the data sheet
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.IndRow + 1
     ReDim vlist(TotalRows)
-    nContador = 0
+    nCounter = 0
     
-    ' Extraer textos del catálogo correspondiente
+    ' Extract texts from the corresponding catalog
     For i = 1 To TotalRows - 1
         If sTypeItem = "Activity" Then
-            sValue = Trim(oData.getCellByPosition(7, i).String) ' Columna H (índice 7)
+            sValue = Trim(oData.getCellByPosition(7, i).String) ' Column H (index 7)
         Else
-            sValue = Trim(oData.getCellByPosition(9, i).String) ' Columna J (índice 9)
-        End If
+            sValue = Trim(oData.getCellByPosition(9, i).String) ' Column J (index 9)
+        Ind If
         
         If sValue <> "" Then
-            vlist(nContador) = sValue
-            nContador = nContador + 1
-        End If
+            vlist(nCounter) = sValue
+            nCounter = nCounter + 1
+        Ind If
     Next i
     
-    ' Inyectar el catálogo en el ComboBox
-    If nContador > 0 Then
-        ReDim Preserve vlist(nContador - 1)
+    ' Inject the catalog into the ComboBox
+    If nCounter > 0 Then
+        ReDim Preserve vlist(nCounter - 1)
         oModelCombo.StringItemList = vlist()
     Else
-        Dim vVacio(0) As String
-        oModelCombo.StringItemList = vVacio()
-    End If
-End Sub
+        Dim vEmpty(0) As String
+        oModelCombo.StringItemList = vEmpty()
+    Ind If
+Ind Sub
 
 
 
@@ -1103,220 +1103,216 @@ End Sub
 '------------------------------------------------------------------------------------------------------
 
 REM =========================================================================
-REM HUB CENTRAL DE ESCRITURA AUTÓNOMO (ESTRUCTURA ATÓMICA)
+REM STANDALONE CENTRAL WRITING HUB (ATOMIC STRUCTURE)
 REM =========================================================================
-Sub GuardarDatosDesdeDialogo(oDialogo As Object, IdTask As Long)
+Sub SaveDataFromDialog(oDialogue As Object, IdTask As Long)
     Dim oDoc As Object, oData As Object
     Dim oModel As Object, oCursor As Object
-    Dim nRowDestino As Long
+    Dim nRowDestiny As Long
     Dim TotalRows As Long, i As Long
     Dim NewId As Long
-    Dim binEsNuevo As Boolean
+    Dim BinIsNew As Boolean
     
-    ' 1. Carga de entorno
+    ' 1. Environment loading
     oDoc = ThisComponent
     oData = oDoc.Sheets.getByName("data")
-    oModel = oDialogo.Model
+    oModel = oDialogue.Model
     
-    ' Desactivar actualización de pantalla para máxima velocidad y evitar parpadeos
+    ' Disable screen updating for maximum speed and to prevent flickering
     oDoc.addActionLock()
     
     ' =========================================================================
-    ' BLOQUE 1: DETERMINACIÓN DE PARÁMETROS EN MEMORIA (SIN MODIFICAR LA BD)
+    ' BLOCK 1: DETERMINATION OF PARAMETERS IN MEMORY (WITHOUT MODIFYING THE DATABASE)
     ' =========================================================================
     If IdTask = 0 Then
-        ' --- ESCENARIO A: REGISTRO DE NUEVA TAREA ---
-        binEsNuevo = True
+        ' --- SCENARIO A: NEW TASK REGISTRATION ---
+        BinIsNew = True
         
         oCursor = oData.createCursor()
-        oCursor.gotoEndOfUsedArea(False)
-        nRowDestino = oCursor.RangeAddress.EndRow + 1
+        oCursor.gotoIndOfUsedArea(False)
+        nRowDestiny = oCursor.RangeAddress.IndRow + 1
         
-        ' Calcular el nuevo ID disponible únicamente en memoria
+        ' Calculate the new ID available only in memory
         NewId = GetNextAvailableId()
         IdTask = NewId
     Else
-        ' --- ESCENARIO B: EDICIÓN DE TAREA EXISTENTE ---
-        binEsNuevo = False
+        ' --- SCENARIO B: EDITING AN EXISTING TASK ---
+        BinIsNew = False
         
         oCursor = oData.createCursor()
-        oCursor.gotoEndOfUsedArea(False)
-        TotalRows = oCursor.RangeAddress.EndRow + 1
+        oCursor.gotoIndOfUsedArea(False)
+        TotalRows = oCursor.RangeAddress.IndRow + 1
         
-        nRowDestino = -1
-        ' Escaneo de base de datos para localizar la fila por ID (Columna F / índice 5)
+        nRowDestiny = -1
+        ' Database scan to locate the row by ID (Column F / index 5)
         For i = 1 To TotalRows - 1
             If CLng(oData.getCellByPosition(5, i).Value) = IdTask Then
-                nRowDestino = i
+                nRowDestiny = i
                 Exit For
-            End If
+            Ind If
         Next i
         
-        ' Control de seguridad si el ID no se localiza en la BD
-        If nRowDestino = -1 Then
+        ' Security check if the ID is not found in the database
+        If nRowDestiny = -1 Then
             oDoc.removeActionLock()
-            MsgBox "Error: No se pudo localizar la tarea con ID " & IdTask & " en la base de datos.", 48, "Error de Sincronización"
+            MsgBox " Error: Could not locate the task with ID" & IdTask & " .in the database", 48, "Synchronization Error"
             Exit Sub
-        End If
-    End If
+        Ind If
+    Ind If
     
     ' =========================================================================
-    ' BLOQUE 2: PROCESAMIENTO Y ESCRITURA DE DATOS EN LA BD
+    ' BLOCK 2: DATA PROCESSING AND WRITING TO THE DATABASE
     ' =========================================================================
     
-    ' Inyección del ID Único (Columna F / índice 5)
-    ' Se centraliza en este bloque junto con el resto de escrituras físicas
-    oData.getCellByPosition(5, nRowDestino).Value = IdTask
+    ' Unique ID Injection (Column F / Index 5)
+    ' It is centralized in this block, along with the rest of the physical title deeds
+    oData.getCellByPosition(5, nRowDestiny).Value = IdTask
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO 1: GUARDAR ACTIVIDAD
+    REM SERVICE 1: SAVE activity
     REM ---------------------------------------------------------------------
-    If oModel.hasByName("CmbActividad") Then
-        ' Extrae el texto del combo e inyecta en Col A (0)
-        Call ServGuardarCmbActividad(oDialogo.getControl("CmbActividad"), oData, nRowDestino)
-    End If
+    If oModel.hasByName("CmbActivity") Then
+        ' Extract the text from the combo box and inject it into Column A (0)
+        Call ServSaveCmbActivity(oDialogue.getControl("CmbActivity"), oData, nRowDestiny)
+    Ind If
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO 2: GUARDAR ESTADO
+    REM SERVICE 2: SAVE STATE
     REM ---------------------------------------------------------------------
-    If oModel.hasByName("CmbEstado") Then
-        ' [Pendiente de implementar]: Extrae el texto del combo e inyecta en Col C (2)
-        Call ServGuardarCmbEstado(oDialogo.getControl("CmbEstado"), oData, nRowDestino)
-    End If
+    If oModel.hasByName("CmbState") Then
+        Call ServSaveCmbState(oDialogue.getControl("CmbState"), oData, nRowDestiny)
+    Ind If
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO 3: GUARDAR TÍTULO
+    REM SERVICE 3: SAVE TITLE
     REM ---------------------------------------------------------------------
-    If oModel.hasByName("TxtTitulo") Then
-        ' [Pendiente de implementar]: Extrae el texto del título e inyecta en Col B (1)
-        Call ServGuardarTxtTitulo(oDialogo.getControl("TxtTitulo"), oData, nRowDestino)
-    End If
+    If oModel.hasByName("TxtTitle") Then
+        Call ServSaveTxtTitle(oDialogue.getControl("TxtTitle"), oData, nRowDestiny)
+    Ind If
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO 4: GUARDAR DESCRIPCIÓN
+    REM SERVICE 4: SAVE DESCRIPTION
     REM ---------------------------------------------------------------------
-    If oModel.hasByName("TxtDescripcion") Then
-        ' [Pendiente de implementar]: Extrae la descripción e inyecta en Col D (3)
-        Call ServGuardarTxtDescripcion(oDialogo.getControl("TxtDescripcion"), oData, nRowDestino)
-    End If
+    If oModel.hasByName("TxtDescription") Then
+        Call ServSaveTxtDescription(oDialogue.getControl("TxtDescription"), oData, nRowDestiny)
+    Ind If
     
     REM ---------------------------------------------------------------------
-    REM SERVICIO 5: GUARDAR POSICIÓN / ORDEN RELATIVO
+    REM SERVICE 5: SAVE POSITION / RELATIVE ORDER
     REM ---------------------------------------------------------------------
-    If oModel.hasByName("NumPosicion") Then
-        ' [Pendiente de implementar]: Procesa la posición ("F" o valor numérico) y calcula el peso en Col E (4)
-        Call ServGuardarNumPosicion(oDialogo.getControl("NumPosicion"), oData, nRowDestino, oModel, binEsNuevo)
-    ElseIf binEsNuevo Then
-        ' Si es una nueva tarea y el diálogo no expone control de posición, se asigna al final por defecto
-        Call ServGuardarNumPosicionPorDefecto(oData, nRowDestino, oModel)
-    End If
+    If oModel.hasByName("NumPosition") Then
+        Call ServSaveNumPosition(oDialogue.getControl("NumPosition"), oData, nRowDestiny, oModel, BinIsNew)
+    ElseIf BinIsNew Then
+        ' If it is a new task and the dialog does not specify a position control, it is assigned to the end by default.
+        Call ServSaveNumPositionByDefault(oData, nRowDestiny, oModel)
+    Ind If
     
-    ' 3. Liberar bloqueo de pantalla
+    ' 3. Unlock screen
     oDoc.removeActionLock()
     
-    ' 4. Mantenimiento y actualización automática
-    ' Ordena la base de datos físicamente y redibuja la pantalla
+    ' 4. Automatic maintenance and updates
+    ' Physically sort the database and redraw the screen
     CustomDataSort()
     oDoc.calculateAll()
-End Sub
+Ind Sub
 
 REM =========================================================================
-REM SERVICIO EXTERNO 1: GUARDAR ACTIVIDAD EN LA BASE DE DATOS
+REM EXTERNAL SERVICE 1: SAVE activity TO THE DATABASE
 REM =========================================================================
-Sub ServGuardarCmbActividad(oControlView As Object, oData As Object, nRowDestino As Long)
+Sub ServSaveCmbActivity(oControlView As Object, oData As Object, nRowDestiny As Long)
     Dim sActivity As String
     
-    ' Extraer el texto limpio directamente de la vista del ComboBox
+    ' Extract the clean text directly from the ComboBox view
     sActivity = Trim(oControlView.Text)
     
-    ' Escribir el valor en la Columna A (índice 0) de la fila correspondiente
-    oData.getCellByPosition(0, nRowDestino).String = sActivity
-End Sub
+    ' Write the value in Column A (index 0) of the corresponding row
+    oData.getCellByPosition(0, nRowDestiny).String = sActivity
+Ind Sub
 
 REM =========================================================================
-REM SERVICIO EXTERNO 2: GUARDAR ESTADO EN LA BASE DE DATOS
+REM EXTERNAL SERVICE 2: SAVE STATE TO THE DATABASE
 REM =========================================================================
-Sub ServGuardarCmbEstado(oControlView As Object, oData As Object, nRowDestino As Long)
+Sub ServSaveCmbState(oControlView As Object, oData As Object, nRowDestiny As Long)
     Dim sState As String
     
-    ' Extraer el texto limpio directamente de la vista del ComboBox de estados
+    ' Extract the clean text directly from the status ComboBox view
     sState = Trim(oControlView.Text)
     
-    ' Escribir el valor en la Columna C (índice 2) de la fila correspondiente
-    oData.getCellByPosition(2, nRowDestino).String = sState
-End Sub
+    ' Write the value in Column C (index 2) of the corresponding row.
+    oData.getCellByPosition(2, nRowDestiny).String = sState
+Ind Sub
 
 REM =========================================================================
-REM SERVICIO EXTERNO 3: GUARDAR TÍTULO EN LA BASE DE DATOS
+REM EXTERNAL SERVICE 3: SAVE TITLE TO THE DATABASE
 REM =========================================================================
-Sub ServGuardarTxtTitulo(oControlView As Object, oData As Object, nRowDestino As Long)
+Sub ServSaveTxtTitle(oControlView As Object, oData As Object, nRowDestiny As Long)
     Dim sTitle As String
     
-    ' Extraer el texto limpio del cuadro de texto (TextField)
+    ' Extract the clean text from the text field (TextField)
     sTitle = Trim(oControlView.Text)
     
-    ' Escribir el valor en la Columna B (índice 1) de la fila correspondiente
-    oData.getCellByPosition(1, nRowDestino).String = sTitle
-End Sub
+    ' Write the value in Column B (index 1) of the corresponding row
+    oData.getCellByPosition(1, nRowDestiny).String = sTitle
+Ind Sub
 
 REM =========================================================================
-REM SERVICIO EXTERNO 4: GUARDAR DESCRIPCIÓN EN LA BASE DE DATOS
+REM EXTERNAL SERVICE 4: SAVE DESCRIPTION TO THE DATABASE
 REM =========================================================================
-Sub ServGuardarTxtDescripcion(oControlView As Object, oData As Object, nRowDestino As Long)
+Sub ServSaveTxtDescription(oControlView As Object, oData As Object, nRowDestiny As Long)
     Dim sDescription As String
     
-    ' Extraer el texto del cuadro de descripción (admite formato multilínea)
+    ' Extract the text from the description box (supports multi-line formatting)
     sDescription = Trim(oControlView.Text)
     
-    ' Escribir el valor en la Columna D (índice 3) de la fila correspondiente
-    oData.getCellByPosition(3, nRowDestino).String = sDescription
-End Sub
+    ' Write the value in Column D (index 3) of the corresponding row.
+    oData.getCellByPosition(3, nRowDestiny).String = sDescription
+Ind Sub
 
 REM =========================================================================
-REM SERVICIO EXTERNO 5: GUARDAR POSICIÓN / ORDEN RELATIVO EN LA BASE DE DATOS
+REM EXTERNAL SERVICE 5: SAVE POSITION / RELATIVE ORDER IN THE DATABASE
 REM =========================================================================
-Sub ServGuardarNumPosicion(oControlView As Object, oData As Object, nRowDestino As Long, oModelDialogo As Object, binEsNuevo As Boolean)
+Sub ServSaveNumPosition(oControlView As Object, oData As Object, nRowDestiny As Long, oModelDialogo As Object, BinIsNew As Boolean)
     Dim sActivity As String, sState As String
     Dim sPosText As String
-    Dim nOrdenCalculado As Double
+    Dim nCalculatedOrder As Double
     
-    ' 1. Leer la actividad y el estado reales ya escritos físicamente en la fila destino
-    sActivity = oData.getCellByPosition(0, nRowDestino).String
-    sState = oData.getCellByPosition(2, nRowDestino).String
+    ' 1. Read the actual activity and status already physically written in the destination row
+    sActivity = oData.getCellByPosition(0, nRowDestiny).String
+    sState = oData.getCellByPosition(2, nRowDestiny).String
     
-    ' 2. Extraer el texto de la vista del ComboBox NumPosicion
+    ' 2. Extract the text from the NumPosition ComboBox view
     sPosText = Trim(oControlView.Text)
     
-    ' 3. Evaluar la entrada y solicitar el peso al motor de prioridades
+    ' 3. Evaluate the input and request the weight from the priority engine
     If LCase(sPosText) = "f" Or sPosText = "" Or Not IsNumeric(sPosText) Then
-        ' Caso "F", vacío o entrada inválida: Colocar al final absoluto del grupo
-        nOrdenCalculado = GetNextOrder(sActivity, sState, 0)
+        ' "F" case, empty or invalid input: Place at the absolute end of the group.
+        nCalculatedOrder = GetNextOrder(sActivity, sState, 0)
     Else
-        ' Caso numérico: Interpolar la posición en medio de la list de tareas
-        nOrdenCalculado = GetNextOrder(sActivity, sState, CLng(sPosText))
-    End If
+        ' Numerical case: Interpolate the position in the middle of the task list
+        nCalculatedOrder = GetNextOrder(sActivity, sState, CLng(sPosText))
+    Ind If
     
-    ' 4. Guardar el peso decimal en la Columna E (índice 4)
-    oData.getCellByPosition(4, nRowDestino).Value = nOrdenCalculado
-End Sub
+    ' 4. Save the decimal weight in Column E (index 4)
+    oData.getCellByPosition(4, nRowDestiny).Value = nCalculatedOrder
+Ind Sub
 
 REM =========================================================================
-REM SERVICIO AUXILIAR 5: ASIGNAR ORDEN RELATIVO POR DEFECTO (AL FINAL)
+REM AUXILIARY SERVICE 5: ASSIGN DEFAULT RELATIVE ORDER (AT THE END)
 REM =========================================================================
-Sub ServGuardarNumPosicionPorDefecto(oData As Object, nRowDestino As Long, oModelDialogo As Object)
+Sub ServSaveNumPositionByDefault(oData As Object, nRowDestiny As Long, oModelDialogo As Object)
     Dim sActivity As String, sState As String
-    Dim nOrdenCalculado As Double
+    Dim nCalculatedOrder As Double
     
-    ' 1. Leer el contexto de grupo actual de la fila
-    sActivity = oData.getCellByPosition(0, nRowDestino).String
-    sState = oData.getCellByPosition(2, nRowDestino).String
+    ' 1. Read the row's current group context.
+    sActivity = oData.getCellByPosition(0, nRowDestiny).String
+    sState = oData.getCellByPosition(2, nRowDestiny).String
     
-    ' 2. Solicitar un orden al final de su respectiva list
-    nOrdenCalculado = GetNextOrder(sActivity, sState, 0)
+    ' 2. Request an order at the end of the respective list
+    nCalculatedOrder = GetNextOrder(sActivity, sState, 0)
     
-    ' 3. Escribir en la Columna E (índice 4)
-    oData.getCellByPosition(4, nRowDestino).Value = nOrdenCalculado
-End Sub
+    ' 3. Write in Column E (index 4)
+    oData.getCellByPosition(4, nRowDestiny).Value = nCalculatedOrder
+Ind Sub
 
 
 
@@ -1324,104 +1320,104 @@ End Sub
 '------------------------------------------------------------------------------------------------------
 
 REM =========================================================================
-REM DIALOGOS Y BOTONES
+REM DIALOGS AND BUTTONS
 REM =========================================================================
 REM =========================================================================
-REM MACRO UNIFICADA: ENVIAR A PAPELERA (SOPORTA DIÁLOGO Y COMANDO)
+REM UNIFIED MACRO: SEND TO TRASH (SUPPORTS DIALOG AND COMMAND)
 REM =========================================================================
-Sub MoverTareaAPapelera(Optional oEvent As Object)
+Sub MoveTaskToTrash(Optional oEvent As Object)
     Dim oDoc As Object, oData As Object, oVisor As Object, oSel As Object
-    Dim oDialogo As Object
-    Dim idActivo As Long, TotalRows As Long, i As Long
-    Dim filaDatosIdx As Long : filaDatosIdx = -1
+    Dim oDialogue As Object
+    Dim IdActive As Long, TotalRows As Long, i As Long
+    Dim DataRowIdx As Long : DataRowIdx = -1
     
-    ' 1. Determinar el contexto de la llamada (¿Proviene de un diálogo?)
-    oDialogo = Nothing
+    ' 1. Determine the context of the call (Does it stem from a dialogue?)
+    oDialogue = Nothing
     If Not IsMissing(oEvent) Then
         On Error Resume Next
-        ' Intenta recuperar el diálogo contenedor si proviene de un control
-        oDialogo = oEvent.Source.Context
+        ' Attempts to retrieve the containing dialog if it originates from a control
+        oDialogue = oEvent.Source.Context
         On Error GoTo 0
-    End If
+    Ind If
     
-    ' 2. Cargar entorno y obtener ID activo de la celda enfocada
+    ' 2. Load environment and get the active ID of the focused cell
     oDoc = ThisComponent
     oVisor = oDoc.Sheets.getByName("view")
     oData = oDoc.Sheets.getByName("data")
     oSel = oDoc.CurrentSelection
     
-    ' Salida de seguridad si no hay una sola celda seleccionada
+    ' Safety exit if no single cell is selected
     If Not oSel.supportsService("com.sun.star.sheet.SheetCell") Then Exit Sub
-    idActivo = GetIdFromPosition(oVisor, oSel.CellAddress.Row, oSel.CellAddress.Column)
+    IdActive = GetIdFromPosition(oVisor, oSel.CellAddress.Row, oSel.CellAddress.Column)
     
-    If idActivo <= 0 Then
-        MsgBox "No se detectó ninguna tarea activa para mover a la papelera.", 48, "Atención"
+    If IdActive <= 0 Then
+        MsgBox "No active task was detected to move to the Trash.", 48, "Attention"
         Exit Sub
-    End If
+    Ind If
     
-    ' 3. Localizar la fila física en la base de datos (Columna F / índice 5)
+    ' 3. Locate the physical row in the database (Column F / index 5)
     Dim oCursor As Object
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.IndRow + 1
     
     For i = 1 To TotalRows - 1
-        If CLng(oData.getCellByPosition(5, i).Value) = idActivo Then
-            filaDatosIdx = i
+        If CLng(oData.getCellByPosition(5, i).Value) = IdActive Then
+            DataRowIdx = i
             Exit For
-        End If
+        Ind If
     Next i
     
-    ' 4. Ejecución del cambio de estado lógico
-    If filaDatosIdx <> -1 Then
-        ' Bloquear actualización de pantalla
+    ' 4. Execution of the logical state change
+    If DataRowIdx <> -1 Then
+        ' Block screen update
         oDoc.addActionLock()
         
-        ' Cambiar el Estado a "Papelera" en la Columna C (índice 2)
-        oData.getCellByPosition(2, filaDatosIdx).String = "Papelera"
+        ' Change the State to "Trash" in Column C (index 2)
+        oData.getCellByPosition(2, DataRowIdx).String = "Trash"
         
-        ' Asignar un orden muy alto para sacarla de las prioridades activas
-        oData.getCellByPosition(4, filaDatosIdx).Value = 99999
+        ' Assign a very high order to remove it from active priorities
+        oData.getCellByPosition(4, DataRowIdx).Value = 99999
         
-        ' Limpiar descripciones en el Visor
+        ' Clean up descriptions in the Viewer
         RunInjectionDescription(oVisor, 0)
         
-        ' Reordenar la base de datos y redibujar el tablero síncronamente
+        ' Reorder the database and redraw the board synchronously
         CustomDataSort()
         
         oDoc.removeActionLock()
         oDoc.calculateAll()
         
-        ' 5. Gestión del Diálogo: Si se detectó el objeto en memoria, lo cerramos
-        If Not IsNull(oDialogo) And Not IsEmpty(oDialogo) Then
-            oDialogo.endExecute()
-        End If
+        ' 5. Dialogue Management: If the object was detected in memory, we close it.
+        If Not IsNull(oDialogue) And Not IsEmpty(oDialogue) Then
+            oDialogue.endExecute()
+        Ind If
         
-        MsgBox "La tarea ha sido movida a la papelera.", 64, "Proceso Completado"
+        MsgBox "The task has been moved to the Trash..", 64, "Process Completed"
     Else
-        MsgBox "Error: No se pudo localizar la tarea en la base de datos.", 48, "Error de Sincronización"
-    End If
-End Sub
+        MsgBox "Error: The task could not be located in the database.", 48, "Synchronization Error"
+    Ind If
+Ind Sub
 
 REM =========================================================================
-REM MACRO UNIFICADA: ELIMINACIÓN PERMANENTE (SOPORTA DIÁLOGO Y COMANDO)
+REM Synchronization Error
 REM =========================================================================
-Sub EliminarTareaActiva(Optional oEvent As Object)
+Sub DeleteActiveTask(Optional oEvent As Object)
     Dim oDoc As Object, oData As Object, oVisor As Object, oSel As Object
-    Dim oDialogo As Object
-    Dim idActivo As Long, TotalRows As Long, i As Long
-    Dim filaDatosIdx As Long : filaDatosIdx = -1
+    Dim oDialogue As Object
+    Dim IdActive As Long, TotalRows As Long, i As Long
+    Dim DataRowIdx As Long : DataRowIdx = -1
     Dim answer As Integer
-    Dim sNombreTareaBorrar As String, sActivityBorrar As String
+    Dim sDeleteTaskName As String, sDeleteActivity As String
     
-    ' 1. Determinar el contexto de la llamada (¿Proviene de un diálogo?)
-    oDialogo = Nothing
+    ' 1. Determine the context of the call (Does it stem from a dialogue?)
+    oDialogue = Nothing
     If Not IsMissing(oEvent) Then
         On Error Resume Next
         ' Intenta recuperar el diálogo contenedor si proviene de un control
-        oDialogo = oEvent.Source.Context
+        oDialogue = oEvent.Source.Context
         On Error GoTo 0
-    End If
+    Ind If
     
     ' 2. Cargar entorno y obtener ID activo de la celda enfocada
     oDoc = ThisComponent
@@ -1431,36 +1427,36 @@ Sub EliminarTareaActiva(Optional oEvent As Object)
     
     ' Salida de seguridad
     If Not oSel.supportsService("com.sun.star.sheet.SheetCell") Then Exit Sub
-    idActivo = GetIdFromPosition(oVisor, oSel.CellAddress.Row, oSel.CellAddress.Column)
+    IdActive = GetIdFromPosition(oVisor, oSel.CellAddress.Row, oSel.CellAddress.Column)
     
-    If idActivo <= 0 Then
+    If IdActive <= 0 Then
         MsgBox "No se detectó ninguna tarea activa para eliminar.", 48, "Atención"
         Exit Sub
-    End If
+    Ind If
     
     ' 3. Localizar la fila física en la base de datos (Columna F / índice 5)
     Dim oCursor As Object
     oCursor = oData.createCursor()
-    oCursor.gotoEndOfUsedArea(False)
-    TotalRows = oCursor.RangeAddress.EndRow + 1
+    oCursor.gotoIndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.IndRow + 1
     
     For i = 1 To TotalRows - 1
-        If CLng(oData.getCellByPosition(5, i).Value) = idActivo Then
-            filaDatosIdx = i
+        If CLng(oData.getCellByPosition(5, i).Value) = IdActive Then
+            DataRowIdx = i
             Exit For
-        End If
+        Ind If
     Next i
     
     ' 4. Confirmación crítica y eliminación física
-    If filaDatosIdx <> -1 Then
-        sActivityBorrar = oData.getCellByPosition(0, filaDatosIdx).String
-        sNombreTareaBorrar = oData.getCellByPosition(1, filaDatosIdx).String
+    If DataRowIdx <> -1 Then
+        sDeleteActivity = oData.getCellByPosition(0, DataRowIdx).String
+        sDeleteTaskName = oData.getCellByPosition(1, DataRowIdx).String
         
         ' Cuadro confirmatorio crítico
         answer = MsgBox("⚠️ ¿Estás seguro de eliminar permanentemente esta tarea? ⚠️" & Chr(13) & Chr(13) & _
-                           "📌 Actividad: " & sActivityBorrar & Chr(13) & _
-                           "📝 Tarea: """ & sNombreTareaBorrar & """" & Chr(13) & _
-                           "🆔 ID Único: " & idActivo & Chr(13) & Chr(13) & _
+                           "📌 Activity: " & sDeleteActivity & Chr(13) & _
+                           "📝 Task: """ & sDeleteTaskName & """" & Chr(13) & _
+                           "🆔 ID Único: " & IdActive & Chr(13) & Chr(13) & _
                            "Esta acción eliminará la fila por completo de la base de datos. Es irreversible.", 4 + 16 + 256, "Confirmar Eliminación Permanente")
                            
         If answer <> 6 Then Exit Sub ' Si cancela, salimos
@@ -1468,8 +1464,8 @@ Sub EliminarTareaActiva(Optional oEvent As Object)
         ' Bloquear actualización de pantalla
         oDoc.addActionLock()
         
-        ' Eliminar fila de la base de datos
-        oData.Rows.removeByIndex(filaDatosIdx, 1)
+        ' Delete fila de la base de datos
+        oData.Rows.removeByIndex(DataRowIdx, 1)
         
         ' Limpiar descripciones residuales en el visor (Celda D4)
         RunInjectionDescription(oVisor, 0)
@@ -1481,15 +1477,15 @@ Sub EliminarTareaActiva(Optional oEvent As Object)
         oDoc.calculateAll()
         
         ' 5. Gestión del Diálogo: Si se detectó el objeto en memoria, lo cerramos
-        If Not IsNull(oDialogo) And Not IsEmpty(oDialogo) Then
-            oDialogo.endExecute()
-        End If
+        If Not IsNull(oDialogue) And Not IsEmpty(oDialogue) Then
+            oDialogue.endExecute()
+        Ind If
         
         MsgBox "La tarea ha sido eliminada con éxito.", 64, "Proceso Completado"
     Else
         MsgBox "Error: No se pudo localizar la tarea en la base de datos.", 48, "Error de Sincronización"
-    End If
-End Sub
+    Ind If
+Ind Sub
 
 
 
@@ -1502,139 +1498,139 @@ REM =========================================================================
 REM =========================================================================
 REM MACRO DE EDICIÓN: EDITAR TAREA SELECCIONADA (USANDO DIÁLOGO UNIFICADO)
 REM =========================================================================
-Sub EditarTareaActiva()
+Sub EditarTaskActiva()
     Dim oDoc As Object, oVisor As Object, oSel As Object
-    Dim oDialogo As Object
-    Dim idActivo As Long
+    Dim oDialogue As Object
+    Dim IdActive As Long
     
     oDoc = ThisComponent
     oVisor = oDoc.Sheets.getByName("view")
     oSel = oDoc.CurrentSelection
     
     ' 1. Detectar el ID de la tarea seleccionada en el visor
-    idActivo = 0
+    IdActive = 0
     If oSel.supportsService("com.sun.star.sheet.SheetCell") Then
-        idActivo = GetIdFromPosition(oVisor, oSel.CellAddress.Row, oSel.CellAddress.Column)
-    End If
+        IdActive = GetIdFromPosition(oVisor, oSel.CellAddress.Row, oSel.CellAddress.Column)
+    Ind If
     
     ' Si la celda seleccionada está vacía o es una cabecera, salimos de inmediato
-    If idActivo <= 0 Then
+    If IdActive <= 0 Then
         MsgBox "Por favor, seleccione primero una tarea válida en el tablero.", 48, "Atención"
         Exit Sub
-    End If
+    Ind If
     
-    ' 2. Cargar e instanciar el diálogo unificado "DialogoPanelTarea"
+    ' 2. Cargar e instanciar el diálogo unificado "DialogoPanelTask"
     DialogLibraries.LoadLibrary("Standard")
-    oDialogo = CreateUnoDialog(DialogLibraries.Standard.DialogoPanelTarea)
+    oDialogue = CreateUnoDialog(DialogLibraries.Standard.DialogoPanelTask)
     
     ' Congelar listener para estabilidad visual
     binFrozenFocus = True
     
-    ' 3. Invocar al Hub de Lectura con el ID seleccionado (Esto mostrará BtnEliminar y BtnPapelera)
-    Call InicializarServiciosDialogo(oDialogo, idActivo)
+    ' 3. Invocar al Hub de Lectura con el ID seleccionado (Esto mostrará BtnDelete y BtnTrash)
+    Call InitializeDialogServices(oDialogue, IdActive)
     
     ' 4. Ejecución del diálogo
-    If oDialogo.execute() = 1 Then
-        ' Guardar las modificaciones sobre el registro existente
-        Call GuardarDatosDesdeDialogo(oDialogo, idActivo)
-    End If
+    If oDialogue.execute() = 1 Then
+        ' Save las modificaciones sobre el registro existente
+        Call SaveDataFromDialog(oDialogue, IdActive)
+    Ind If
     
     ' Liberar recursos de forma segura
     binFrozenFocus = False
-    oDialogo.dispose()
-End Sub
+    oDialogue.dispose()
+Ind Sub
 
 REM =========================================================================
 REM MACRO DE CREACIÓN: REGISTRAR NUEVA TAREA (USANDO DIÁLOGO UNIFICADO)
 REM =========================================================================
-Sub RegistrarNuevaTarea()
+Sub RegistrarNuevaTask()
     Dim oDoc As Object, oVisor As Object, oData As Object
-    Dim oDialogo As Object
+    Dim oDialogue As Object
     Dim sActivityFiltro As String, sStateFiltro As String
     
     oDoc = ThisComponent
     oVisor = oDoc.Sheets.getByName("view")
     oData = oDoc.Sheets.getByName("data")
     
-    ' 1. Cargar e instanciar el diálogo unificado "DialogoPanelTarea"
+    ' 1. Cargar e instanciar el diálogo unificado "DialogoPanelTask"
     DialogLibraries.LoadLibrary("Standard")
-    oDialogo = CreateUnoDialog(DialogLibraries.Standard.DialogoPanelTarea)
+    oDialogue = CreateUnoDialog(DialogLibraries.Standard.DialogoPanelTask)
     
     ' Congelar el listener temporalmente para evitar parpadeos visuales
     binFrozenFocus = True
     
-    ' 2. Invocar al Hub de Lectura con ID = 0 (Esto ocultará automáticamente BtnEliminar y BtnPapelera)
-    Call InicializarServiciosDialogo(oDialogo, 0)
+    ' 2. Invocar al Hub de Lectura con ID = 0 (Esto ocultará automáticamente BtnDelete y BtnTrash)
+    Call InitializeDialogServices(oDialogue, 0)
     
     ' 3. Pre-selección inteligente basada en los filtros activos del Visor
     sActivityFiltro = Trim(oVisor.getCellByPosition(0, 1).String) ' Celda A2
     sStateFiltro = Trim(oVisor.getCellByPosition(0, 2).String)    ' Celda A3
     
     If sActivityFiltro <> "" Then
-        oDialogo.getControl("CmbActividad").setText(sActivityFiltro)
-    End If
+        oDialogue.getControl("CmbActivity").setText(sActivityFiltro)
+    Ind If
     
     If sStateFiltro <> "" Then
-        oDialogo.getControl("CmbEstado").setText(sStateFiltro)
+        oDialogue.getControl("CmbState").setText(sStateFiltro)
     Else
-        oDialogo.getControl("CmbEstado").setText("In progress")
-    End If
+        oDialogue.getControl("CmbState").setText("In progress")
+    Ind If
     
     ' 4. Ejecución del diálogo
-    If oDialogo.execute() = 1 Then
+    If oDialogue.execute() = 1 Then
         ' Validación de campos obligatorios
-        If Trim(oDialogo.getControl("TxtTitulo").Text) = "" Then
-            MsgBox "La 'Actividad' y el nombre de la 'Tarea' son obligatorios.", 48, "Campos Incompletos"
+        If Trim(oDialogue.getControl("TxtTitle").Text) = "" Then
+            MsgBox "La 'Activity' y el nombre de la 'Task' son obligatorios.", 48, "Campos Incompletos"
         Else
-            ' Guardar la nueva tarea en la base de datos (ID = 0)
-            Call GuardarDatosDesdeDialogo(oDialogo, 0)
-        End If
-    End If
+            ' Save la nueva tarea en la base de datos (ID = 0)
+            Call SaveDataFromDialog(oDialogue, 0)
+        Ind If
+    Ind If
     
     ' Liberar entorno de forma segura
     binFrozenFocus = False
-    oDialogo.dispose()
-End Sub
+    oDialogue.dispose()
+Ind Sub
 
 REM =========================================================================
-REM PUNTO DE ENTRADA: GESTIONAR PROYECTOS / ACTIVIDADES
+REM PUNTO DE ENTRADA: GESTIONAR PROYECTOS / activityES
 REM =========================================================================
-Sub GestionarActividades()
+Sub ManageActivityes()
     G_ManagedItemType = "Activity"
     Call AbrirPanelItem()
-End Sub
+Ind Sub
 
 REM =========================================================================
 REM PUNTO DE ENTRADA: GESTIONAR COLUMNAS / ESTADOS
 REM =========================================================================
-Sub GestionarEstados()
+Sub ManageStates()
     G_ManagedItemType = "State"
     Call AbrirPanelItem()
-End Sub
+Ind Sub
 
 REM =========================================================================
 REM INVOCADOR UNIFICADO: ABRIR PANEL DE ITEM
 REM =========================================================================
 Sub AbrirPanelItem()
-    Dim oDialogo As Object
+    Dim oDialogue As Object
     
     ' 1. Instanciar el diálogo unificado "DialogoPanelItem"
     DialogLibraries.LoadLibrary("Standard")
-    oDialogo = CreateUnoDialog(DialogLibraries.Standard.DialogoPanelItem)
+    oDialogue = CreateUnoDialog(DialogLibraries.Standard.DialogoPanelItem)
     
     ' Configurar el título dinámicamente según el contexto global
-    oDialogo.Title = "Gestión de " & G_ManagedItemType & "es"
+    oDialogue.Title = "Gestión de " & G_ManagedItemType & "es"
     
     ' 2. Invocar al Hub de Lectura (ID = 0) para poblar el ComboBox "CmbItem"
-    Call InicializarServiciosDialogo(oDialogo, 0)
+    Call InitializeDialogServices(oDialogue, 0)
     
     ' Deshabilitar inicialmente el botón aceptar hasta que el usuario escriba o seleccione
-    oDialogo.getControl("BtnAceptar").Model.Enabled = False
+    oDialogue.getControl("BtnAceptar").Model.Inabled = False
     
     ' 3. Desplegar panel en pantalla
-    oDialogo.execute()
-    oDialogo.dispose()
-End Sub
+    oDialogue.execute()
+    oDialogue.dispose()
+Ind Sub
 
 
 
@@ -1645,70 +1641,70 @@ REM =========================================================================
 REM INTERACTIVO: CAMBIO DINÁMICO DE BOTÓN EN TIEMPO DE EJECUCIÓN
 REM =========================================================================
 Sub CmbItemTextoModificado(oEvent As Object)
-    Dim oDialogo As Object, oBtnModel As Object, oCmbItem As Object
+    Dim oDialogue As Object, oBtnModel As Object, oCmbItem As Object
     Dim sTexto As String
     Dim vlist() As String
     Dim binExiste As Boolean
     
     ' Obtener referencias
     oCmbItem = oEvent.Source
-    oDialogo = oCmbItem.Context
-    oBtnModel = oDialogo.getControl("BtnAceptar").Model
+    oDialogue = oCmbItem.Context
+    oBtnModel = oDialogue.getControl("BtnAceptar").Model
     
     sTexto = Trim(oCmbItem.Text)
     
-    ' 1. Estado Vacío: Deshabilitar el botón y restablecerlo a neutral
+    ' 1. State Vacío: Deshabilitar el botón y restablecerlo a neutral
     If sTexto = "" Then
-        oBtnModel.Enabled = False
+        oBtnModel.Inabled = False
         oBtnModel.Label = "Aceptar"
         oBtnModel.BackgroundColor = RGB(240, 240, 240) ' Gris neutral
         oBtnModel.TextColor = RGB(0, 0, 0)             ' Texto negro
         Exit Sub
-    End If
+    Ind If
     
     ' 2. Verificar si el texto ya existe en la list del combo
     vlist() = oCmbItem.Model.StringItemList
-    binExiste = ElementoExisteEnlist(sTexto, vlist())
+    binExiste = ElementoExisteInlist(sTexto, vlist())
     
     ' 3. Aplicar mutación visual dinámica al botón
     If binExiste Then
         ' --- MODO ELIMINACIÓN (Existe en la list) ---
-        oBtnModel.Enabled = True
-        oBtnModel.Label = "⮿ Eliminar"
+        oBtnModel.Inabled = True
+        oBtnModel.Label = "⮿ Delete"
         oBtnModel.BackgroundColor = RGB(220, 53, 69)   ' Rojo de advertencia
         oBtnModel.TextColor = RGB(255, 255, 255)       ' Texto blanco para contraste
     Else
         ' --- MODO ADICIÓN (Nuevo elemento) ---
-        oBtnModel.Enabled = True
+        oBtnModel.Inabled = True
         oBtnModel.Label = "[+] Agregar"
         oBtnModel.BackgroundColor = RGB(40, 167, 69)   ' Verde de inserción
         oBtnModel.TextColor = RGB(255, 255, 255)       ' Texto blanco
-    End If
-End Sub
+    Ind If
+Ind Sub
 
 REM =========================================================================
 REM HUB DE ESCRITURA DE CATÁLOGOS: AGREGAR O ELIMINAR SEGÚN CONTEXTO (MUTADO)
 REM =========================================================================
-Sub GuardarCatalogoDesdeDialogo(oEvent As Object)
-    Dim oDialogo As Object, oData As Object, oCmbItem As Object
+Sub SaveCatalogoDesdeDialogo(oEvent As Object)
+    Dim oDialogue As Object, oData As Object, oCmbItem As Object
     Dim sTexto As String
     Dim vlist() As String
     Dim binExiste As Boolean
     Dim answer As Integer
     
-    oDialogo = oEvent.Source.Context
+    oDialogue = oEvent.Source.Context
     oData = ThisComponent.Sheets.getByName("data")
-    oCmbItem = oDialogo.getControl("CmbItem")
+    oCmbItem = oDialogue.getControl("CmbItem")
     sTexto = Trim(oCmbItem.Text)
     
     If sTexto = "" Then Exit Sub
     
     vlist() = oCmbItem.Model.StringItemList
-    binExiste = ElementoExisteEnlist(sTexto, vlist())
+    binExiste = ElementoExisteInlist(sTexto, vlist())
     
     If binExiste Then
         ' OPERACIÓN: ELIMINACIÓN EN CASCADA
-        oDialogo.endExecute()
+        oDialogue.endExecute()
         Call RunCascadeDelete(sTexto, G_ManagedItemType)
     Else
         ' OPERACIÓN: AGREGAR NUEVO ELEMENTO
@@ -1725,39 +1721,39 @@ Sub GuardarCatalogoDesdeDialogo(oEvent As Object)
             Else
                 nColIdx = 9
                 mDatos = oData.getCellRangeByName("J2:J20").getDataArray()
-            End If
+            Ind If
             
             For i = 0 To UBound(mDatos)
                 If Trim(mDatos(i)(0)) = "" Then
                     filaVacia = i + 2
                     Exit For
-                End If
+                Ind If
             Next i
             
             If filaVacia <> -1 Then
                 oData.getCellByPosition(nColIdx, filaVacia - 1).String = sTexto
-                oDialogo.endExecute()
+                oDialogue.endExecute()
                 
                 CustomDataSort()
                 MsgBox G_ManagedItemType & " agregada correctamente al catálogo.", 64, "Éxito"
             Else
                 MsgBox "Error: El catálogo de " & G_ManagedItemType & "es está lleno.", 48, "Límite Excedido"
-            End If
-        End If
-    End If
-End Sub
+            Ind If
+        Ind If
+    Ind If
+Ind Sub
 
 REM =========================================================================
 REM FUNCIÓN AUXILIAR: COMPARACIÓN INSENSIBLE A MAYÚSCULAS EN ARREGLOS
 REM =========================================================================
-Function ElementoExisteEnlist(sBuscar As String, ByRef vlist() As String) As Boolean
+Function ElementoExisteInlist(sSearch As String, ByRef vlist() As String) As Boolean
     Dim i As Long
-    sBuscar = LCase(Trim(sBuscar))
+    sSearch = LCase(Trim(sSearch))
     For i = 0 To UBound(vlist)
-        If LCase(Trim(vlist(i))) = sBuscar Then
-            ElementoExisteEnlist = True
+        If LCase(Trim(vlist(i))) = sSearch Then
+            ElementoExisteInlist = True
             Exit Function
-        End If
+        Ind If
     Next i
-    ElementoExisteEnlist = False
-End Function
+    ElementoExisteInlist = False
+Ind Function
