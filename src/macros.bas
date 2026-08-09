@@ -1614,9 +1614,9 @@ REM =========================================================================
 Sub OpenItemPanel()
     Dim oDialogue As Object
     
-    ' 1. Instantiate the unified dialog "DialogoPanelItem"
+    ' 1. Instantiate the unified dialog "DialogPanelItem"
     DialogLibraries.LoadLibrary("Standard")
-    oDialogue = CreateOneDialog(DialogLibraries.Standard.DialogoPanelItem)
+    oDialogue = CreateOneDialog(DialogLibraries.Standard.DialogPanelItem)
     
     ' Configure the title dynamically based on the global context
     oDialogue.Title = " Management of" & G_ManagedItemType & "is"
