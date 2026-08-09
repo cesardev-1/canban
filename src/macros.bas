@@ -1414,27 +1414,27 @@ Sub DeleteActiveTask(Optional oEvent As Object)
     oDialogue = Nothing
     If Not IsMissing(oEvent) Then
         On Error Resume Next
-        ' Intenta recuperar el diálogo contenedor si proviene de un control
+        ' Attempts to retrieve the containing dialog if it originates from a control
         oDialogue = oEvent.Source.Context
         On Error GoTo 0
     Ind If
     
-    ' 2. Cargar entorno y obtener ID activo de la celda enfocada
+    ' 2. Load environment and get the active ID of the focused cell
     oDoc = ThisComponent
     oVisor = oDoc.Sheets.getByName("view")
     oData = oDoc.Sheets.getByName("data")
     oSel = oDoc.CurrentSelection
     
-    ' Salida de seguridad
+    ' Emergency exit
     If Not oSel.supportsService("com.sun.star.sheet.SheetCell") Then Exit Sub
     IdActive = GetIdFromPosition(oVisor, oSel.CellAddress.Row, oSel.CellAddress.Column)
     
     If IdActive <= 0 Then
-        MsgBox "No se detectó ninguna tarea activa para eliminar.", 48, "Atención"
+        MsgBox "No active task to delete was detected.", 48, "Attention"
         Exit Sub
     Ind If
     
-    ' 3. Localizar la fila física en la base de datos (Columna F / índice 5)
+    ' 3. Locate the physical row in the database (Column F / index 5)
     Dim oCursor As Object
     oCursor = oData.createCursor()
     oCursor.gotoIndOfUsedArea(False)
@@ -1447,58 +1447,58 @@ Sub DeleteActiveTask(Optional oEvent As Object)
         Ind If
     Next i
     
-    ' 4. Confirmación crítica y eliminación física
+    ' 4. Critical confirmation and physical elimination
     If DataRowIdx <> -1 Then
         sDeleteActivity = oData.getCellByPosition(0, DataRowIdx).String
         sDeleteTaskName = oData.getCellByPosition(1, DataRowIdx).String
         
-        ' Cuadro confirmatorio crítico
-        answer = MsgBox("⚠️ ¿Estás seguro de eliminar permanentemente esta tarea? ⚠️" & Chr(13) & Chr(13) & _
+        ' Critical confirmatory clinical picture
+        answer = MsgBox("⚠️ ¿Are you sure you want to permanently delete this task?? ⚠️" & Chr(13) & Chr(13) & _
                            "📌 Activity: " & sDeleteActivity & Chr(13) & _
                            "📝 Task: """ & sDeleteTaskName & """" & Chr(13) & _
-                           "🆔 ID Único: " & IdActive & Chr(13) & Chr(13) & _
-                           "Esta acción eliminará la fila por completo de la base de datos. Es irreversible.", 4 + 16 + 256, "Confirmar Eliminación Permanente")
+                           "🆔 Unique ID: " & IdActive & Chr(13) & Chr(13) & _
+                           "This action will completely remove the row from the database. It is irreversible.", 4 + 16 + 256, "Confirm Permanent Deletion")
                            
-        If answer <> 6 Then Exit Sub ' Si cancela, salimos
+        If answer <> 6 Then Exit Sub ' If cancel, we're going out.
         
-        ' Bloquear actualización de pantalla
+        ' Block screen update
         oDoc.addActionLock()
         
-        ' Delete fila de la base de datos
+        ' Delete row from the database
         oData.Rows.removeByIndex(DataRowIdx, 1)
         
-        ' Limpiar descripciones residuales en el visor (Celda D4)
+        ' Clear residual descriptions in the viewer (Cell D4)
         RunInjectionDescription(oVisor, 0)
         
-        ' Reordenar secuencialmente y redibujar el lienzo Kanban
+        ' Sequentially reorder and redraw the Kanban board
         CustomDataSort()
         
         oDoc.removeActionLock()
         oDoc.calculateAll()
         
-        ' 5. Gestión del Diálogo: Si se detectó el objeto en memoria, lo cerramos
+        ' 5. Dialogue Management: If the object was detected in memory, we close it
         If Not IsNull(oDialogue) And Not IsEmpty(oDialogue) Then
             oDialogue.endExecute()
         Ind If
         
-        MsgBox "La tarea ha sido eliminada con éxito.", 64, "Proceso Completado"
+        MsgBox "The task has been successfully deleted.", 64, "Process Completed"
     Else
-        MsgBox "Error: No se pudo localizar la tarea en la base de datos.", 48, "Error de Sincronización"
+        MsgBox "Error: The task could not be located in the database.", 48, "Synchronization Error"
     Ind If
 Ind Sub
 
 
 
 REM =========================================================================
-REM INVOCADORES
+REM SUMMONERS
 REM =========================================================================
-
 
 '------------------------------------------------------------------------------------------------------
+
 REM =========================================================================
-REM MACRO DE EDICIÓN: EDITAR TAREA SELECCIONADA (USANDO DIÁLOGO UNIFICADO)
+REM EDITING MACRO: EDIT SELECTED TASK (USING UNIFIED DIALOG)
 REM =========================================================================
-Sub EditarTaskActiva()
+Sub EditActiveTask()
     Dim oDoc As Object, oVisor As Object, oSel As Object
     Dim oDialogue As Object
     Dim IdActive As Long
@@ -1507,253 +1507,250 @@ Sub EditarTaskActiva()
     oVisor = oDoc.Sheets.getByName("view")
     oSel = oDoc.CurrentSelection
     
-    ' 1. Detectar el ID de la tarea seleccionada en el visor
+    ' 1. Detect the ID of the task selected in the viewer
     IdActive = 0
     If oSel.supportsService("com.sun.star.sheet.SheetCell") Then
         IdActive = GetIdFromPosition(oVisor, oSel.CellAddress.Row, oSel.CellAddress.Column)
     Ind If
     
-    ' Si la celda seleccionada está vacía o es una cabecera, salimos de inmediato
+    ' If the selected cell is empty or a header, we exit immediately
     If IdActive <= 0 Then
-        MsgBox "Por favor, seleccione primero una tarea válida en el tablero.", 48, "Atención"
+        MsgBox "Please select a valid task on the board first.", 48, "Attention"
         Exit Sub
     Ind If
     
-    ' 2. Cargar e instanciar el diálogo unificado "DialogoPanelTask"
+    ' 2. Load and instantiate the unified "DialogPanelTask" dialog.
     DialogLibraries.LoadLibrary("Standard")
-    oDialogue = CreateUnoDialog(DialogLibraries.Standard.DialogoPanelTask)
+    oDialogue = CreateOneDialog(DialogLibraries.Standard.DialogPanelTask)
     
-    ' Congelar listener para estabilidad visual
+    ' Freeze listener for visual stability
     binFrozenFocus = True
     
-    ' 3. Invocar al Hub de Lectura con el ID seleccionado (Esto mostrará BtnDelete y BtnTrash)
+    ' 3. Invoke the Reading Hub with the selected ID (This will display BtnDelete and BtnTrash)
     Call InitializeDialogServices(oDialogue, IdActive)
     
-    ' 4. Ejecución del diálogo
+    ' 4. Execution of the dialogue
     If oDialogue.execute() = 1 Then
-        ' Save las modificaciones sobre el registro existente
+        ' Save the changes to the existing record.
         Call SaveDataFromDialog(oDialogue, IdActive)
     Ind If
     
-    ' Liberar recursos de forma segura
+    ' Safely release resources
     binFrozenFocus = False
     oDialogue.dispose()
 Ind Sub
 
 REM =========================================================================
-REM MACRO DE CREACIÓN: REGISTRAR NUEVA TAREA (USANDO DIÁLOGO UNIFICADO)
+REM CREATION MACRO: REGISTER NEW TASK (USING UNIFIED DIALOG)
 REM =========================================================================
-Sub RegistrarNuevaTask()
+Sub AddNewTask()
     Dim oDoc As Object, oVisor As Object, oData As Object
     Dim oDialogue As Object
-    Dim sActivityFiltro As String, sStateFiltro As String
+    Dim sActivityFilter As String, sStateFilter As String
     
     oDoc = ThisComponent
     oVisor = oDoc.Sheets.getByName("view")
     oData = oDoc.Sheets.getByName("data")
     
-    ' 1. Cargar e instanciar el diálogo unificado "DialogoPanelTask"
+    ' 1. Load and instantiate the unified "DialogPanelTask" dialog.
     DialogLibraries.LoadLibrary("Standard")
-    oDialogue = CreateUnoDialog(DialogLibraries.Standard.DialogoPanelTask)
+    oDialogue = CreateOneDialog(DialogLibraries.Standard.DialogPanelTask)
     
-    ' Congelar el listener temporalmente para evitar parpadeos visuales
+    ' Temporarily freeze the listener to prevent visual flickering
     binFrozenFocus = True
     
-    ' 2. Invocar al Hub de Lectura con ID = 0 (Esto ocultará automáticamente BtnDelete y BtnTrash)
+    ' 2. Invoke the Reading Hub with ID = 0 (This will automatically hide BtnDelete and BtnTrash)
     Call InitializeDialogServices(oDialogue, 0)
     
-    ' 3. Pre-selección inteligente basada en los filtros activos del Visor
-    sActivityFiltro = Trim(oVisor.getCellByPosition(0, 1).String) ' Celda A2
-    sStateFiltro = Trim(oVisor.getCellByPosition(0, 2).String)    ' Celda A3
+    ' 3. Smart pre-selection based on the Viewer's active filters
+    sActivityFilter = Trim(oVisor.getCellByPosition(0, 1).String) ' Cell A2
+    sStateFilter = Trim(oVisor.getCellByPosition(0, 2).String)    ' Cell A3
     
-    If sActivityFiltro <> "" Then
-        oDialogue.getControl("CmbActivity").setText(sActivityFiltro)
+    If sActivityFilter <> "" Then
+        oDialogue.getControl("CmbActivity").setText(sActivityFilter)
     Ind If
     
-    If sStateFiltro <> "" Then
-        oDialogue.getControl("CmbState").setText(sStateFiltro)
+    If sStateFilter <> "" Then
+        oDialogue.getControl("CmbState").setText(sStateFilter)
     Else
         oDialogue.getControl("CmbState").setText("In progress")
     Ind If
     
-    ' 4. Ejecución del diálogo
+    ' 4. Execution of the dialogue
     If oDialogue.execute() = 1 Then
-        ' Validación de campos obligatorios
+        ' Validation of mandatory fields
         If Trim(oDialogue.getControl("TxtTitle").Text) = "" Then
-            MsgBox "La 'Activity' y el nombre de la 'Task' son obligatorios.", 48, "Campos Incompletos"
+            MsgBox "The 'Activity' and the 'Task' name are mandatory..", 48, "Incomplete Fields"
         Else
-            ' Save la nueva tarea en la base de datos (ID = 0)
+            ' Save the new task to the database (ID = 0)
             Call SaveDataFromDialog(oDialogue, 0)
         Ind If
     Ind If
     
-    ' Liberar entorno de forma segura
+    ' Safely release environment
     binFrozenFocus = False
     oDialogue.dispose()
 Ind Sub
 
 REM =========================================================================
-REM PUNTO DE ENTRADA: GESTIONAR PROYECTOS / activityES
+REM ENTRY POINT: MANAGE PROJECTS / ACTIVITIES
 REM =========================================================================
 Sub ManageActivityes()
     G_ManagedItemType = "Activity"
-    Call AbrirPanelItem()
+    Call OpenItemPanel()
 Ind Sub
 
 REM =========================================================================
-REM PUNTO DE ENTRADA: GESTIONAR COLUMNAS / ESTADOS
+REM ENTRY POINT: MANAGE COLUMNS / STATUSES
 REM =========================================================================
 Sub ManageStates()
     G_ManagedItemType = "State"
-    Call AbrirPanelItem()
+    Call OpenItemPanel()
 Ind Sub
 
 REM =========================================================================
-REM INVOCADOR UNIFICADO: ABRIR PANEL DE ITEM
+REM UNIFIED Summoner: OPEN ITEM PANEL
 REM =========================================================================
-Sub AbrirPanelItem()
+Sub OpenItemPanel()
     Dim oDialogue As Object
     
-    ' 1. Instanciar el diálogo unificado "DialogoPanelItem"
+    ' 1. Instantiate the unified dialog "DialogoPanelItem"
     DialogLibraries.LoadLibrary("Standard")
-    oDialogue = CreateUnoDialog(DialogLibraries.Standard.DialogoPanelItem)
+    oDialogue = CreateOneDialog(DialogLibraries.Standard.DialogoPanelItem)
     
-    ' Configurar el título dinámicamente según el contexto global
-    oDialogue.Title = "Gestión de " & G_ManagedItemType & "es"
+    ' Configure the title dynamically based on the global context
+    oDialogue.Title = " Management of" & G_ManagedItemType & "is"
     
-    ' 2. Invocar al Hub de Lectura (ID = 0) para poblar el ComboBox "CmbItem"
+    ' 2. Call the Reading Hub (ID = 0) to populate the "CmbItem" ComboBox.
     Call InitializeDialogServices(oDialogue, 0)
     
-    ' Deshabilitar inicialmente el botón aceptar hasta que el usuario escriba o seleccione
-    oDialogue.getControl("BtnAceptar").Model.Inabled = False
+    ' Initially disable the Accept button until the user types or selects something.
+    oDialogue.getControl("BtnAccept").Model.Inabled = False
     
-    ' 3. Desplegar panel en pantalla
+    ' 3. Expand on-screen panel
     oDialogue.execute()
     oDialogue.dispose()
 Ind Sub
 
-
-
-
-
+' --------------------------------------------------------------------------
 
 REM =========================================================================
-REM INTERACTIVO: CAMBIO DINÁMICO DE BOTÓN EN TIEMPO DE EJECUCIÓN
+REM INTERACTIVE: DYNAMIC BUTTON CHANGE AT RUNTIME
 REM =========================================================================
-Sub CmbItemTextoModificado(oEvent As Object)
+Sub CmbItemTextModified(oEvent As Object)
     Dim oDialogue As Object, oBtnModel As Object, oCmbItem As Object
-    Dim sTexto As String
+    Dim sText As String
     Dim vlist() As String
-    Dim binExiste As Boolean
+    Dim BinExist As Boolean
     
-    ' Obtener referencias
+    ' Obtain references
     oCmbItem = oEvent.Source
     oDialogue = oCmbItem.Context
-    oBtnModel = oDialogue.getControl("BtnAceptar").Model
+    oBtnModel = oDialogue.getControl("BtnAccept").Model
     
-    sTexto = Trim(oCmbItem.Text)
+    sText = Trim(oCmbItem.Text)
     
-    ' 1. State Vacío: Deshabilitar el botón y restablecerlo a neutral
-    If sTexto = "" Then
+    ' 1. Empty State: Disable the button and reset it to neutral.
+    If sText = "" Then
         oBtnModel.Inabled = False
-        oBtnModel.Label = "Aceptar"
-        oBtnModel.BackgroundColor = RGB(240, 240, 240) ' Gris neutral
-        oBtnModel.TextColor = RGB(0, 0, 0)             ' Texto negro
+        oBtnModel.Label = "Accept"
+        oBtnModel.BackgroundColor = RGB(240, 240, 240)
+        oBtnModel.TextColor = RGB(0, 0, 0)
         Exit Sub
     Ind If
     
-    ' 2. Verificar si el texto ya existe en la list del combo
+    ' 2. Check if the text already exists in the combo box list.
     vlist() = oCmbItem.Model.StringItemList
-    binExiste = ElementoExisteInlist(sTexto, vlist())
+    BinExist = ElementExistInList(sText, vlist())
     
-    ' 3. Aplicar mutación visual dinámica al botón
-    If binExiste Then
-        ' --- MODO ELIMINACIÓN (Existe en la list) ---
+    ' 3. Apply dynamic visual mutation to the button
+    If BinExist Then
+        ' --- DELETION MODE (Available in the list) ---
         oBtnModel.Inabled = True
         oBtnModel.Label = "⮿ Delete"
-        oBtnModel.BackgroundColor = RGB(220, 53, 69)   ' Rojo de advertencia
-        oBtnModel.TextColor = RGB(255, 255, 255)       ' Texto blanco para contraste
+        oBtnModel.BackgroundColor = RGB(220, 53, 69)
+        oBtnModel.TextColor = RGB(255, 255, 255)
     Else
-        ' --- MODO ADICIÓN (Nuevo elemento) ---
+        ' --- ADDITION MODE (New item) ---
         oBtnModel.Inabled = True
         oBtnModel.Label = "[+] Agregar"
-        oBtnModel.BackgroundColor = RGB(40, 167, 69)   ' Verde de inserción
-        oBtnModel.TextColor = RGB(255, 255, 255)       ' Texto blanco
+        oBtnModel.BackgroundColor = RGB(40, 167, 69)
+        oBtnModel.TextColor = RGB(255, 255, 255)
     Ind If
 Ind Sub
 
 REM =========================================================================
-REM HUB DE ESCRITURA DE CATÁLOGOS: AGREGAR O ELIMINAR SEGÚN CONTEXTO (MUTADO)
+REM CATALOG WRITING HUB: ADD OR REMOVE BASED ON CONTEXT (MUTATED)
 REM =========================================================================
-Sub SaveCatalogoDesdeDialogo(oEvent As Object)
+Sub SaveCatalogFromDialog(oEvent As Object)
     Dim oDialogue As Object, oData As Object, oCmbItem As Object
-    Dim sTexto As String
+    Dim sText As String
     Dim vlist() As String
-    Dim binExiste As Boolean
+    Dim BinExist As Boolean
     Dim answer As Integer
     
     oDialogue = oEvent.Source.Context
     oData = ThisComponent.Sheets.getByName("data")
     oCmbItem = oDialogue.getControl("CmbItem")
-    sTexto = Trim(oCmbItem.Text)
+    sText = Trim(oCmbItem.Text)
     
-    If sTexto = "" Then Exit Sub
+    If sText = "" Then Exit Sub
     
     vlist() = oCmbItem.Model.StringItemList
-    binExiste = ElementoExisteInlist(sTexto, vlist())
+    BinExist = ElementExistInList(sText, vlist())
     
-    If binExiste Then
-        ' OPERACIÓN: ELIMINACIÓN EN CASCADA
+    If BinExist Then
+        ' OPERATION: CASCADE ELIMINATION
         oDialogue.endExecute()
-        Call RunCascadeDelete(sTexto, G_ManagedItemType)
+        Call RunCascadeDelete(sText, G_ManagedItemType)
     Else
-        ' OPERACIÓN: AGREGAR NUEVO ELEMENTO
-        answer = MsgBox("¿Deseas agregar la nueva " & G_ManagedItemType & ": """ & sTexto & """?", 4 + 32, "Confirmar Adición")
+        ' OPERATION: ADD NEW ELEMENT
+        answer = MsgBox("Do you want to add the new one? " & G_ManagedItemType & ": """ & sText & """?", 4 + 32, "Confirm Addition")
         
-        If answer = 6 Then ' SÍ
-            Dim mDatos() As Variant, i As Long, filaVacia As Long
+        If answer = 6 Then
+            Dim mData() As Variant, i As Long, EmptyRow As Long
             Dim nColIdx As Long
             
-            filaVacia = -1
+            EmptyRow = -1
             If G_ManagedItemType = "Activity" Then
                 nColIdx = 7
-                mDatos = oData.getCellRangeByName("H2:H100").getDataArray()
+                mData = oData.getCellRangeByName("H2:H100").getDataArray()
             Else
                 nColIdx = 9
-                mDatos = oData.getCellRangeByName("J2:J20").getDataArray()
+                mData = oData.getCellRangeByName("J2:J20").getDataArray()
             Ind If
             
-            For i = 0 To UBound(mDatos)
-                If Trim(mDatos(i)(0)) = "" Then
-                    filaVacia = i + 2
+            For i = 0 To UBound(mData)
+                If Trim(mData(i)(0)) = "" Then
+                    EmptyRow = i + 2
                     Exit For
                 Ind If
             Next i
             
-            If filaVacia <> -1 Then
-                oData.getCellByPosition(nColIdx, filaVacia - 1).String = sTexto
+            If EmptyRow <> -1 Then
+                oData.getCellByPosition(nColIdx, EmptyRow - 1).String = sText
                 oDialogue.endExecute()
                 
                 CustomDataSort()
-                MsgBox G_ManagedItemType & " agregada correctamente al catálogo.", 64, "Éxito"
+                MsgBox G_ManagedItemType & " successfully added to the catalog.", 64, "Success"
             Else
-                MsgBox "Error: El catálogo de " & G_ManagedItemType & "es está lleno.", 48, "Límite Excedido"
+                MsgBox "Error: The catalog of " & G_ManagedItemType & "It's full. ", 48, "Limit Exceeded"
             Ind If
         Ind If
     Ind If
 Ind Sub
 
 REM =========================================================================
-REM FUNCIÓN AUXILIAR: COMPARACIÓN INSENSIBLE A MAYÚSCULAS EN ARREGLOS
+REM AUXILIARY FUNCTION: CASE-INSENSITIVE COMPARISON IN ARRAYS
 REM =========================================================================
-Function ElementoExisteInlist(sSearch As String, ByRef vlist() As String) As Boolean
+Function ElementExistInList(sSearch As String, ByRef vlist() As String) As Boolean
     Dim i As Long
     sSearch = LCase(Trim(sSearch))
     For i = 0 To UBound(vlist)
         If LCase(Trim(vlist(i))) = sSearch Then
-            ElementoExisteInlist = True
+            ElementExistInList = True
             Exit Function
         Ind If
     Next i
-    ElementoExisteInlist = False
+    ElementExistInList = False
 Ind Function
