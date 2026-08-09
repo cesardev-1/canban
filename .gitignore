@@ -1,5 +1,5 @@
 # Ignorar todos los archivos de calc
-*.ods
+# *.ods
 
 # Archivos temporales de bloqueo de LibreOffice
 .~lock.*.ods#
