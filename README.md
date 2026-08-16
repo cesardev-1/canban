@@ -2,6 +2,9 @@
 
 "Kanban Board" for LibreOffice Calc.
 
+<img width="1020" height="561" alt="imagen" src="https://github.com/user-attachments/assets/dd68521a-ecbb-4d2f-86db-53252e5606f0" />
+
+
 This project is a visual organization and task management tool in Kanban format, developed entirely within **LibreOffice Calc** using **Basic (StarBasic)** programming from the UNO API.
 
 The system is designed under a separation of concerns, which is divided into an interactive visual board (Presentation Layer) and a structured flat record (Data Layer).
