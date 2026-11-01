@@ -15,14 +15,21 @@ The system is designed under a separation of concerns, which is divided into an 
 - **Intuitive Capture and Interaction:** The single task form visually adapts to the context of use. It offers simplified options for rapid creation and transforms its colors and buttons to clearly alert the user during sensitive operations such as sending to the trash or permanent deletion.
 - **Security and Traceability of Your Tasks:** Each task is linked to a unique and persistent record in the internal database. This ensures that priorities can be reorganized, moved up, or moved down with complete certainty that texts and descriptions will never be mixed up or lost.
 - **Separation of Operation and Configuration:** The system separates the daily organization routine from the workspace structuring. Through a dedicated configuration panel, it is possible to centrally add or remove projects and columns without interfering with quick task capture.
+- **Activity States and Scoped States:** Activities can carry their own access-gating states (manual or date-based rules with a custom message), and task states can be general or scoped to a specific activity.
 - **Local Approach and Total Privacy:** The tool is 100% self-contained and works completely offline. It requires no registrations, cloud accounts, or external dependencies; all your information remains privately secured on your computer.
 
 This project aims to offer a local, lightweight, customizable, and privacy-oriented alternative for the agile management of straightforward projects, without relying on external web services or third-party databases.
 
 ## Getting Started (Installation)
-1. Download the `canban.ods` file from this repository.
+1. Download one of the spreadsheet files from this repository:
+   - `canban_blank.ods`: empty template for new users.
+   - `canban_trial.ods`: sample data to explore the system.
+   - `canban_test.ods`: development/testing build.
 2. Open the file with LibreOffice Calc.
 3. If a message appears indicating that macros are disabled, refer to the **Macro Security** section below.
+
+If you already have data in a previous version, use the migration tool described in
+**Migrating from a Previous Version** instead of starting from the template.
 
 ## Macro Security
 For macros to work correctly on your computer:
@@ -38,7 +45,27 @@ For macros to work correctly on your computer:
 5. To **add/remove an activity**, use the `Ctrl + Alt + A` shortcut.
 6. To **send a task to the trash**, use the `Ctrl + Alt + P` shortcut.
 7. To **delete (permanently erase) a task**, use the `Ctrl + Alt + D` shortcut.
+8. To **manage activity states**, use the `Ctrl + Alt + S` shortcut.
 
+
+## Distributions
+- `canban_blank.ods`: template with only the essential base states and no tasks or activities.
+- `canban_trial.ods`: sample data covering activity states, per-activity states and tasks.
+- `canban_test.ods`: development build (same behavior as the draft) for testing unvalidated changes.
+- `canban.ods`: previous/legacy version.
+
+## Migrating from a Previous Version
+Use the Python migration tool to move your data from an older ODS into the
+current version:
+
+```
+python3 migrate/migrate_ods.py --source old.ods
+```
+
+Without arguments, the tool prompts for the source file, the destination folder
+(default `migrate/migration_result/`) and the result file name. The migrated file
+keeps your tasks, activities and states; base/trash roles are inferred from the
+legacy names and can be adjusted later in the state manager.
 
 ## How to Contribute or Modify Macros
 If you wish to make changes to the code:

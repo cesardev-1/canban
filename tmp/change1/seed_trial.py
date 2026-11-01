@@ -1,21 +1,25 @@
-"""Populate canban_draft.ods with atomic sample data for Change 3.
+"""Populate a variant ODS with the Change 3 sample data.
 
-Run after build_draft_ods.py. The sample covers every activity-state
-condition type, general and scoped task states, and per-activity base
-states. It finishes by leaving the blocked "Personal" activity selected
-so the startup access service can be observed on the next open.
+Usage: python3 seed_trial.py <path.ods>
+
+The sample covers every activity-state condition type, general and scoped
+task states, and per-activity base states. It finishes by leaving the
+blocked "Personal" activity selected so the startup access service can be
+observed on the next open.
 """
 import os
 import subprocess
+import sys
 import time
 
 import uno
 from com.sun.star.beans import PropertyValue
 
-PORT = 2221
+ODS = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else "canban_trial.ods")
 BASE = os.path.abspath("tmp/change1")
-PROFILE = os.path.join(BASE, "lo_profile_seed")
-ODS = os.path.abspath("canban_draft.ods")
+_NAME = os.path.splitext(os.path.basename(ODS))[0]
+PORT = 2300 + (sum(ord(c) for c in _NAME) % 200)
+PROFILE = os.path.join(BASE, "lo_profile_" + _NAME)
 
 # Activity states catalog: M=name, N=type, O=param, P=message.
 ACTIVITY_STATES = [
@@ -70,7 +74,7 @@ NEW_TASKS = [
 def main() -> None:
     os.makedirs(PROFILE, exist_ok=True)
     try:
-        os.remove(os.path.join(BASE, ".~lock.canban_draft.ods#"))
+        os.remove(os.path.join(os.path.dirname(ODS), ".~lock." + os.path.basename(ODS) + "#"))
     except OSError:
         pass
 
@@ -156,6 +160,10 @@ def main() -> None:
         print("seeded", ODS)
     finally:
         proc.terminate()
+        try:
+            proc.wait(timeout=15)
+        except Exception:
+            proc.kill()
 
 
 if __name__ == "__main__":

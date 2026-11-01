@@ -8,3 +8,12 @@
 # Archivos temporales comunes del sistema
 Thumbs.db
 .DS_Store
+
+# herramientas de build (no forman parte de la distribucion)
+tmp/
+
+# salidas de la herramienta de migracion
+migrate/migration_result/
+
+# Python cache
+__pycache__/

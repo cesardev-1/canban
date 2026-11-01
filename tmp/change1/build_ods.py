@@ -1,10 +1,22 @@
+"""Build the base ODS and copy it into the three deliverables.
+
+Pipeline:
+  1. This script builds tmp/change1/base.ods from canban.ods, injecting the
+     final macros, the dialogs, the data headers and the event bindings.
+  2. base.ods is copied to canban_blank.ods, canban_trial.ods and
+     canban_test.ods.
+  3. Run seed_blank.py on canban_blank.ods and seed_trial.py on
+     canban_trial.ods / canban_test.ods to populate the sample data.
+"""
 import html
 import re
+import shutil
 import zipfile
 
 SRC = "canban.ods"
-DST = "canban_draft.ods"
-MACROS = "src/macros_draft.bas"
+BASE = "tmp/change1/base.ods"
+VARIANTS = ["canban_blank.ods", "canban_trial.ods", "canban_test.ods"]
+MACROS = "src/macros.bas"
 DIALOG_ITEM = "tmp/change1/DialogPanelItem.xml"
 DIALOG_TASK = "tmp/change1/DialogPanelTask.xml"
 DIALOG_ACTSTATE = "tmp/change1/DialogPanelActState.xml"
@@ -121,7 +133,7 @@ def main() -> None:
     dialog_actstate = open(DIALOG_ACTSTATE, "rb").read()
 
     added = False
-    with zipfile.ZipFile(SRC, "r") as zin, zipfile.ZipFile(DST, "w") as zout:
+    with zipfile.ZipFile(SRC, "r") as zin, zipfile.ZipFile(BASE, "w") as zout:
         for item in zin.infolist():
             data = zin.read(item.filename)
             if item.filename == "Basic/Standard/Module1.xml":
@@ -153,7 +165,9 @@ def main() -> None:
         if not added:
             zout.writestr("Dialogs/Standard/DialogPanelActState.xml", dialog_actstate)
 
-    print("wrote", DST)
+    for name in VARIANTS:
+        shutil.copyfile(BASE, name)
+    print("wrote", BASE, "and", ", ".join(VARIANTS))
 
 
 if __name__ == "__main__":

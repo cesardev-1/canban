@@ -5,7 +5,8 @@ the current change set.
 
 ## Tags (labels)
 
-Status: **future** (post Change 3).
+Status: **future**. Change 3 is finalized in this release; the tags feature
+described below is not part of it.
 
 ### Concept
 
