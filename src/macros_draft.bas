@@ -12,6 +12,7 @@ Global G_SelectedActState As String
 Global G_UpdatingPanel As Boolean
 Global G_LastActivity As String
 Global G_GateBusy As Boolean
+Global G_BoardFilterBusy As Boolean
 
 Sub ToggleInterface
     Dim oDoc As Object
@@ -551,9 +552,11 @@ Sub CompactCatalog(sType As String)
 End Sub
 
 REM Adds a new element at the end of the catalog.
-Sub AddCatalogItem(sName As String, sType As String)
+Sub AddCatalogItem(sName As String, sType As String, Optional sScope As String)
     Dim oDoc As Object, oData As Object
     Dim nCol As Long, nMaxRow As Long, i As Long, nFree As Long
+
+    If IsMissing(sScope) Then sScope = ""
 
     oDoc = ThisComponent
     oData = oDoc.Sheets.getByName("data")
@@ -579,11 +582,12 @@ Sub AddCatalogItem(sName As String, sType As String)
     oData.getCellByPosition(nCol, nFree).String = sName
     If sType = "State" Then
         oData.getCellByPosition(10, nFree).String = ""
-        oData.getCellByPosition(11, nFree).String = ""
+        oData.getCellByPosition(11, nFree).String = Trim(sScope)
     Else
         oData.getCellByPosition(8, nFree).String = ""
     End If
 
+    If sType = "State" Then Call RefreshBoardStateFilters()
     Call CustomDataSort()
     MsgBox sType & " successfully added to the catalog.", 64, "Success"
 End Sub
@@ -783,10 +787,9 @@ Function ActivityStateLabelToValue(sLabel As String) As String
     End If
 End Function
 
-REM Populates the scope combo (General + activity names) and selects the current scope.
-Sub PopulateCmbScope(oDialogue As Object, sItem As String)
+REM Fills the scope filter (General + activity names) and selects General.
+Sub PopulateScopeFilter(oDialogue As Object)
     Dim vActs As Variant, vList() As String
-    Dim sScope As String
     Dim i As Long, n As Long
 
     vActs = GetCatalogNames("Activity")
@@ -806,18 +809,81 @@ Sub PopulateCmbScope(oDialogue As Object, sItem As String)
         vList(0) = "General"
     End If
 
-    sScope = GetStateScope(sItem)
-    G_SelectedScope = sScope
-
     G_UpdatingPanel = True
     oDialogue.getControl("CmbScope").Model.StringItemList = vList()
-    If Trim(sScope) = "" Then
-        oDialogue.getControl("CmbScope").setText("General")
-    Else
-        oDialogue.getControl("CmbScope").setText(sScope)
-    End If
+    oDialogue.getControl("CmbScope").setText("General")
     oDialogue.getControl("CmbScope").Model.Enabled = True
     G_UpdatingPanel = False
+End Sub
+
+REM Returns "" for Generalized scope, or the selected activity name.
+Function GetSelectedScopeValue(oDialogue As Object) As String
+    Dim s As String
+    s = Trim(oDialogue.getControl("CmbScope").Text)
+    If LCase(s) = "general" Then s = ""
+    GetSelectedScopeValue = s
+End Function
+
+REM Fills CmbItem with the states that belong to the selected scope.
+Sub ServPopulateCmbItemFiltered(oDialogue As Object, oData As Object, sScope As String)
+    Dim oCursor As Object
+    Dim TotalRows As Long, i As Long, n As Long
+    Dim vList() As String
+    Dim sState As String, sL As String
+
+    oCursor = oData.createCursor()
+    oCursor.gotoEndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.EndRow + 1
+    ReDim vList(TotalRows)
+    n = 0
+    For i = 1 To TotalRows - 1
+        sState = Trim(oData.getCellByPosition(9, i).String)
+        sL = Trim(oData.getCellByPosition(11, i).String)
+        If sState <> "" Then
+            If (LCase(sScope) = "general" And sL = "") Or _
+               (LCase(sScope) <> "general" And LCase(sL) = LCase(sScope)) Then
+                vList(n) = sState
+                n = n + 1
+            End If
+        End If
+    Next i
+
+    G_UpdatingPanel = True
+    If n > 0 Then
+        ReDim Preserve vList(n - 1)
+        oDialogue.getControl("CmbItem").Model.StringItemList = vList()
+    Else
+        Dim vEmpty(0) As String
+        oDialogue.getControl("CmbItem").Model.StringItemList = vEmpty()
+    End If
+    G_UpdatingPanel = False
+End Sub
+
+REM Handles a change of the scope filter in the states panel.
+Sub CmbScopeChanged(oEvent As Object)
+    Dim oDialogue As Object, oData As Object
+    Dim sScope As String
+
+    If G_UpdatingPanel Then Exit Sub
+    oDialogue = oEvent.Source.Context
+    oData = ThisComponent.Sheets.getByName("data")
+    sScope = Trim(oDialogue.getControl("CmbScope").Text)
+
+    Call ServPopulateCmbItemFiltered(oDialogue, oData, sScope)
+
+    G_UpdatingPanel = True
+    oDialogue.getControl("CmbItem").setText("")
+    oDialogue.getControl("TxtNewName").Text = ""
+    oDialogue.getControl("CmbPos").setText("")
+    oDialogue.getControl("CmbRole").setText("")
+    G_UpdatingPanel = False
+    Call ApplyWatermarks(oDialogue)
+
+    G_SelectedItem = ""
+    G_SelectedPos = 0
+    G_SelectedRole = ""
+    Call SetSelectionControlsEnabled(oDialogue, False)
+    Call UpdateItemPanelButton(oEvent)
 End Sub
 
 REM Populates the activity-state combo (Active + catalog) and selects the current state.
@@ -867,11 +933,6 @@ Sub SetSelectionControlsEnabled(oDialogue As Object, bEnabled As Boolean)
             oDialogue.getControl("CmbRole").Model.Enabled = bEnabled
         End If
     End If
-    If oDialogue.Model.hasByName("CmbScope") Then
-        If G_ManagedItemType = "State" Then
-            oDialogue.getControl("CmbScope").Model.Enabled = bEnabled
-        End If
-    End If
     If oDialogue.Model.hasByName("CmbActState") Then
         If G_ManagedItemType = "Activity" Then
             oDialogue.getControl("CmbActState").Model.Enabled = bEnabled
@@ -897,11 +958,11 @@ Sub CmbItemSelectionChanged(oEvent As Object)
     oDialogue.getControl("CmbPos").setText("")
     If G_ManagedItemType = "State" Then
         oDialogue.getControl("CmbRole").setText("")
-        oDialogue.getControl("CmbScope").setText("")
     Else
         oDialogue.getControl("CmbActState").setText("")
     End If
     G_UpdatingPanel = False
+    Call ApplyWatermarks(oDialogue)
 
     If sText = "" Then
         G_SelectedItem = ""
@@ -922,7 +983,6 @@ Sub CmbItemSelectionChanged(oEvent As Object)
         Call PopulateCmbPos(oDialogue, sText)
         If G_ManagedItemType = "State" Then
             Call PopulateCmbRole(oDialogue, sText)
-            Call PopulateCmbScope(oDialogue, sText)
         Else
             Call PopulateCmbActState(oDialogue, sText)
         End If
@@ -942,10 +1002,10 @@ REM Recomputes the dynamic action button (Add / Delete / Modify + icons).
 Sub UpdateItemPanelButton(oEvent As Object)
     Dim oDialogue As Object, oBtn As Object
     Dim sItem As String, sNewName As String, sPos As String, sRoleLabel As String
-    Dim sScopeLabel As String, sActStateLabel As String
+    Dim sActStateLabel As String
     Dim vList() As String
     Dim bExist As Boolean, bName As Boolean, bPos As Boolean, bRole As Boolean
-    Dim bScope As Boolean, bActState As Boolean
+    Dim bActState As Boolean
     Dim nPos As Long, sRole As String, sIcons As String
 
     If G_UpdatingPanel Then Exit Sub
@@ -975,7 +1035,7 @@ Sub UpdateItemPanelButton(oEvent As Object)
     End If
 
     ' Existing item: compute the pending changes.
-    sNewName = Trim(oDialogue.getControl("TxtNewName").Text)
+    sNewName = WatermarkValue(oDialogue.getControl("TxtNewName"))
     bName = (sNewName <> "" And LCase(sNewName) <> LCase(sItem))
 
     bPos = False
@@ -986,18 +1046,12 @@ Sub UpdateItemPanelButton(oEvent As Object)
     End If
 
     bRole = False
-    bScope = False
     bActState = False
     If G_ManagedItemType = "State" Then
         If oDialogue.getControl("CmbRole").Model.Enabled Then
             sRoleLabel = Trim(oDialogue.getControl("CmbRole").Text)
             sRole = RoleLabelToValue(sRoleLabel)
             bRole = (sRole <> G_SelectedRole)
-        End If
-        If oDialogue.getControl("CmbScope").Model.Enabled Then
-            sScopeLabel = Trim(oDialogue.getControl("CmbScope").Text)
-            If LCase(sScopeLabel) = "general" Then sScopeLabel = ""
-            bScope = (LCase(sScopeLabel) <> LCase(G_SelectedScope))
         End If
     Else
         If oDialogue.getControl("CmbActState").Model.Enabled Then
@@ -1006,14 +1060,14 @@ Sub UpdateItemPanelButton(oEvent As Object)
         End If
     End If
 
-    If Not bName And Not bPos And Not bRole And Not bScope And Not bActState Then
+    If Not bName And Not bPos And Not bRole And Not bActState Then
         ' DELETE mode
         oBtn.Enabled = True
         oBtn.Label = "⮿ Delete"
         oBtn.BackgroundColor = RGB(220, 53, 69)
         oBtn.TextColor = RGB(255, 255, 255)
     Else
-        ' MODIFY mode with icons: name, position, role, scope, activity state.
+        ' MODIFY mode with icons: name, position, role, activity state.
         sIcons = ""
         If bName Then sIcons = sIcons & "[✎]"
         If bPos Then
@@ -1023,10 +1077,6 @@ Sub UpdateItemPanelButton(oEvent As Object)
         If bRole Then
             If sIcons <> "" Then sIcons = sIcons & "&"
             sIcons = sIcons & "[◇]"
-        End If
-        If bScope Then
-            If sIcons <> "" Then sIcons = sIcons & "&"
-            sIcons = sIcons & "[⊞]"
         End If
         If bActState Then
             If sIcons <> "" Then sIcons = sIcons & "&"
@@ -1038,6 +1088,90 @@ Sub UpdateItemPanelButton(oEvent As Object)
         oBtn.TextColor = RGB(255, 255, 255)
     End If
 End Sub
+
+REM =========================================================================
+REM WATERMARK / PLACEHOLDER HELPERS
+REM =========================================================================
+
+Function GetPlaceholder(sName As String) As String
+    Select Case sName
+        Case "TxtNewName"
+            GetPlaceholder = "New name (optional)"
+        Case "TxtParam"
+            GetPlaceholder = "Date (YYYY-MM-DD)"
+        Case "TxtMessage"
+            GetPlaceholder = "Message shown when blocked"
+        Case "TxtTitle"
+            GetPlaceholder = "Task title"
+        Case "TxtDescription"
+            GetPlaceholder = "Description"
+        Case Else
+            GetPlaceholder = ""
+    End Select
+End Function
+
+REM Applies grey watermark placeholders to empty text fields.
+Sub ApplyWatermarks(oDialogue As Object)
+    Dim vNames As Variant, i As Long
+    Dim sName As String, sPh As String, oCtrl As Object
+
+    vNames = Array("TxtNewName", "TxtParam", "TxtMessage", "TxtTitle", "TxtDescription")
+    For i = 0 To UBound(vNames)
+        sName = vNames(i)
+        sPh = GetPlaceholder(sName)
+        If sPh <> "" And oDialogue.Model.hasByName(sName) Then
+            oCtrl = oDialogue.getControl(sName)
+            G_UpdatingPanel = True
+            If Trim(oCtrl.Text) = "" Then
+                oCtrl.Text = sPh
+                oCtrl.Model.TextColor = RGB(160, 160, 160)
+            End If
+            G_UpdatingPanel = False
+        End If
+    Next i
+End Sub
+
+REM Clears the placeholder when the field receives focus.
+Sub WatermarkFocus(oEvent As Object)
+    Dim oCtrl As Object, sName As String, sPh As String
+
+    oCtrl = oEvent.Source
+    sName = oCtrl.Model.Name
+    sPh = GetPlaceholder(sName)
+    If sPh <> "" Then
+        If Trim(oCtrl.Text) = sPh Then
+            G_UpdatingPanel = True
+            oCtrl.Text = ""
+            oCtrl.Model.TextColor = RGB(0, 0, 0)
+            G_UpdatingPanel = False
+        End If
+    End If
+End Sub
+
+REM Restores the placeholder when the field loses focus and is empty.
+Sub WatermarkBlur(oEvent As Object)
+    Dim oCtrl As Object, sName As String, sPh As String
+
+    oCtrl = oEvent.Source
+    sName = oCtrl.Model.Name
+    sPh = GetPlaceholder(sName)
+    If sPh <> "" Then
+        If Trim(oCtrl.Text) = "" Then
+            G_UpdatingPanel = True
+            oCtrl.Text = sPh
+            oCtrl.Model.TextColor = RGB(160, 160, 160)
+            G_UpdatingPanel = False
+        End If
+    End If
+End Sub
+
+REM Returns the field value, treating the placeholder as empty.
+Function WatermarkValue(oCtrl As Object) As String
+    Dim s As String
+    s = Trim(oCtrl.Text)
+    If s = GetPlaceholder(oCtrl.Model.Name) Then s = ""
+    WatermarkValue = s
+End Function
 
 REM Applies the pending rename / position / role / scope / activity-state changes.
 Sub ModifyCatalogItem(sOld As String, sNew As String, bNameChanged As Boolean, bPosChanged As Boolean, nNewPos As Long, bRoleChanged As Boolean, sNewRole As String, bScopeChanged As Boolean, sNewScope As String, bActStateChanged As Boolean, sNewActState As String, sType As String)
@@ -1059,8 +1193,11 @@ Sub ModifyCatalogItem(sOld As String, sNew As String, bNameChanged As Boolean, b
     End If
     If bActStateChanged Then
         Call SetActivityState(sCurrent, sNewActState)
+        ' If the visible activity became gated, switch to an accessible one.
+        Call EnsureAccessibleActivity(True)
     End If
 
+    Call RefreshBoardStateFilters()
     Call DrawingBoard()
     MsgBox sType & " updated successfully.", 64, "Success"
 End Sub
@@ -1288,6 +1425,16 @@ Sub RevertActivityFilter()
     G_GateBusy = False
 End Sub
 
+REM Sets the activity filter without firing the access gate (used by seeding).
+Sub SetActivityFilterSilently(sActivity As String)
+    Dim oVisor As Object
+
+    oVisor = ThisComponent.Sheets.getByName("view")
+    G_GateBusy = True
+    oVisor.getCellByPosition(0, 1).String = sActivity
+    G_GateBusy = False
+End Sub
+
 REM Validates access to an activity; may resolve a manual condition or revert A2.
 Function ValidateActivityAccess(sActivity As String) As Boolean
     Dim sType As String, sMessage As String
@@ -1336,6 +1483,201 @@ Function GetTaskActivityById(oData As Object, IdTask As Long) As String
     Next i
     GetTaskActivityById = ""
 End Function
+
+REM =========================================================================
+REM STARTUP ACCESS SERVICE + BOARD STATE FILTER
+REM =========================================================================
+
+REM True when the activity exists in the catalog.
+Function ActivityExists(sActivity As String) As Boolean
+    Dim oData As Object, oCursor As Object
+    Dim TotalRows As Long, i As Long
+    Dim t As String
+
+    oData = ThisComponent.Sheets.getByName("data")
+    t = LCase(Trim(sActivity))
+    ActivityExists = False
+    If t = "" Then Exit Function
+
+    oCursor = oData.createCursor()
+    oCursor.gotoEndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.EndRow + 1
+    For i = 1 To TotalRows - 1
+        If LCase(Trim(oData.getCellByPosition(7, i).String)) = t Then
+            ActivityExists = True
+            Exit Function
+        End If
+    Next i
+End Function
+
+REM Returns the first accessible activity (catalog order), or "".
+Function FindAccessibleActivity() As String
+    Dim oData As Object, oCursor As Object
+    Dim TotalRows As Long, i As Long
+    Dim sAct As String, sType As String, sMsg As String
+
+    oData = ThisComponent.Sheets.getByName("data")
+    oCursor = oData.createCursor()
+    oCursor.gotoEndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.EndRow + 1
+    FindAccessibleActivity = ""
+
+    For i = 1 To TotalRows - 1
+        sAct = Trim(oData.getCellByPosition(7, i).String)
+        If sAct <> "" Then
+            If Not IsActivityBlocked(sAct, sMsg, sType) Then
+                FindAccessibleActivity = sAct
+                Exit Function
+            End If
+        End If
+    Next i
+End Function
+
+REM Ensures A2 points to an accessible activity (startup and live changes).
+Sub EnsureAccessibleActivity(bInteractive As Boolean)
+    Dim oVisor As Object
+    Dim sCur As String, sNext As String
+    Dim sType As String, sMsg As String
+
+    oVisor = ThisComponent.Sheets.getByName("view")
+    sCur = Trim(oVisor.getCellByPosition(0, 1).String)
+
+    If sCur <> "" And ActivityExists(sCur) Then
+        If Not IsActivityBlocked(sCur, sMsg, sType) Then
+            G_LastActivity = sCur
+            Exit Sub
+        End If
+    End If
+
+    sNext = FindAccessibleActivity()
+    If sNext <> "" Then
+        If bInteractive And sCur <> "" Then
+            MsgBox "The activity """ & sCur & """ cannot be accessed in its current state." & Chr(13) & _
+                   "Switching to """ & sNext & """.", 48, "Activity Access"
+        End If
+        G_GateBusy = True
+        oVisor.getCellByPosition(0, 1).String = sNext
+        G_GateBusy = False
+        G_LastActivity = sNext
+        Call DrawingBoard()
+        Exit Sub
+    End If
+
+    MsgBox "No activity is currently accessible. Please change an activity's state in the manager.", 48, "Activity Access"
+    Call ManageActivityes()
+    sNext = FindAccessibleActivity()
+    If sNext <> "" Then
+        G_GateBusy = True
+        oVisor.getCellByPosition(0, 1).String = sNext
+        G_GateBusy = False
+        G_LastActivity = sNext
+        Call DrawingBoard()
+    End If
+End Sub
+
+REM Builds the board state list: general states + the current activity's states.
+Function BuildBoardStateList(sActivity As String) As Variant
+    Dim oData As Object, oCursor As Object
+    Dim TotalRows As Long, i As Long, n As Long
+    Dim vList() As Variant
+    Dim sState As String, sRole As String, sScope As String
+
+    oData = ThisComponent.Sheets.getByName("data")
+    oCursor = oData.createCursor()
+    oCursor.gotoEndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.EndRow + 1
+    ReDim vList(TotalRows)
+    n = 0
+
+    For i = 1 To TotalRows - 1
+        sState = Trim(oData.getCellByPosition(9, i).String)
+        sRole = LCase(Trim(oData.getCellByPosition(10, i).String))
+        sScope = LCase(Trim(oData.getCellByPosition(11, i).String))
+        If sState <> "" And sRole <> "trash" Then
+            If sScope = "" Or sScope = LCase(Trim(sActivity)) Then
+                vList(n) = sState
+                n = n + 1
+            End If
+        End If
+    Next i
+
+    If n = 0 Then
+        ReDim vList(0)
+        vList(0) = ""
+    Else
+        ReDim Preserve vList(n - 1)
+    End If
+    BuildBoardStateList = vList()
+End Function
+
+REM True when the value is in the list (empty is treated as valid).
+Function ValueInArray(vList As Variant, s As String) As Boolean
+    Dim i As Long, t As String
+
+    t = LCase(Trim(s))
+    ValueInArray = False
+    If t = "" Then
+        ValueInArray = True
+        Exit Function
+    End If
+    For i = 0 To UBound(vList)
+        If LCase(Trim(CStr(vList(i)))) = t Then
+            ValueInArray = True
+            Exit Function
+        End If
+    Next i
+End Function
+
+
+
+REM Sets a list validation pointing at the helper range in column Q.
+Sub ApplyBoardStateList(oCell As Object)
+    Dim oVal As Object
+
+    oVal = oCell.Validation
+    oVal.Type = com.sun.star.sheet.ValidationType.LIST
+    oVal.Formula1 = "$data.$Q$2:$Q$20"
+    oVal.ShowList = com.sun.star.sheet.TableValidationVisibility.UNSORTED
+    oVal.IgnoreBlankCells = True
+    oVal.ShowErrorMessage = False
+    oVal.ShowInputMessage = False
+    oCell.Validation = oVal
+End Sub
+
+REM Rebuilds the filtered board state list (helper column Q) and A3/B3 validations.
+Sub RefreshBoardStateFilters()
+    Dim oData As Object, oVisor As Object
+    Dim TotalRows As Long, i As Long, nMax As Long
+    Dim vList As Variant
+    Dim sAct As String
+
+    oData = ThisComponent.Sheets.getByName("data")
+    oVisor = ThisComponent.Sheets.getByName("view")
+    sAct = Trim(oVisor.getCellByPosition(0, 1).String)
+    vList = BuildBoardStateList(sAct)
+
+    nMax = GetCatalogMaxRow("State")
+    For i = 1 To nMax
+        oData.getCellByPosition(16, i).String = ""
+    Next i
+    For i = 0 To UBound(vList)
+        If Trim(CStr(vList(i))) <> "" Then
+            oData.getCellByPosition(16, i + 1).String = CStr(vList(i))
+        End If
+    Next i
+
+    Call ApplyBoardStateList(oVisor.getCellByPosition(0, 2))
+    Call ApplyBoardStateList(oVisor.getCellByPosition(1, 2))
+
+    G_BoardFilterBusy = True
+    If Not ValueInArray(vList, Trim(oVisor.getCellByPosition(0, 2).String)) Then
+        oVisor.getCellByPosition(0, 2).String = ""
+    End If
+    If Not ValueInArray(vList, Trim(oVisor.getCellByPosition(1, 2).String)) Then
+        oVisor.getCellByPosition(1, 2).String = ""
+    End If
+    G_BoardFilterBusy = False
+End Sub
 
 REM =========================================================================
 REM UNIFIED CASCADE ERASURE ENGINE
@@ -1436,6 +1778,8 @@ Sub RunCascadeDelete(sItem As String, sTypeItem As String)
         End If
 
         ' C. Reorder and redraw the Kanban board
+        If sTypeItem = "Activity" Then Call EnsureAccessibleActivity(True)
+        Call RefreshBoardStateFilters()
         CustomDataSort()
         
         oDoc.removeActionLock()
@@ -1459,6 +1803,12 @@ Sub StartListenerSelection()
     ' Remember the current activity so the access gate can revert A2.
     G_LastActivity = Trim(oSheetHeard.getCellByPosition(0, 1).String)
     G_GateBusy = False
+    G_BoardFilterBusy = False
+
+    ' Startup verification: ensure the visible activity is accessible and
+    ' the board state filters are in sync.
+    Call EnsureAccessibleActivity(False)
+    Call RefreshBoardStateFilters()
 
     ' Create the selection event listener object
     oSeleccionListener = CreateUnoListener("VisorSeleccion_", "com.sun.star.view.XSelectionChangeListener")
@@ -1540,8 +1890,8 @@ Sub Visor_onContentChanged(oEvent As Object)
     
     On Error Resume Next
 
-    ' Ignore the programmatic revert done by the activity gate.
-    If G_GateBusy Then Exit Sub
+    ' Ignore the programmatic updates done by the gate and filter services.
+    If G_GateBusy Or G_BoardFilterBusy Then Exit Sub
     
     ' 1. ESCAPE: Validate that the change comes from a single physical cell
     If Not oEvent.supportsService("com.sun.star.sheet.SheetCell") Then Exit Sub
@@ -1568,6 +1918,8 @@ Sub Visor_onContentChanged(oEvent As Object)
                 binFrozenFocus = False
                 Exit Sub
             End If
+            ' Refresh the board state lists for the new activity.
+            Call RefreshBoardStateFilters()
         End If
        
         ' Temporarily freeze the selection listener to avoid visual loops
@@ -1915,7 +2267,14 @@ Sub InitializeDialogServices(oDialogue As Object, IdActive As Long)
     REM ---------------------------------------------------------------------
     If oModel.hasByName("CmbItem") Then
         Dim sTypeItem As String : sTypeItem = G_ManagedItemType
-        Call ServPopulateCmbItem(oModel.getByName("CmbItem"), oDialogue.getControl("CmbItem"), oData, sTypeItem)
+
+        ' Populate the selector list. For states, the scope filter comes first.
+        If sTypeItem = "State" Then
+            Call PopulateScopeFilter(oDialogue)
+            Call ServPopulateCmbItemFiltered(oDialogue, oData, "General")
+        Else
+            Call ServPopulateCmbItem(oModel.getByName("CmbItem"), oDialogue.getControl("CmbItem"), oData, sTypeItem)
+        End If
 
         ' Initialize the management controls (no item selected yet).
         G_UpdatingPanel = True
@@ -1938,13 +2297,20 @@ Sub InitializeDialogServices(oDialogue As Object, IdActive As Long)
         End If
         If oModel.hasByName("CmbScope") Then
             oDialogue.getControl("CmbScope").setVisible(sTypeItem = "State")
-            oDialogue.getControl("CmbScope").setText("")
-            oDialogue.getControl("CmbScope").Model.Enabled = False
+        End If
+        If oModel.hasByName("LblScope") Then
+            oDialogue.getControl("LblScope").setVisible(sTypeItem = "State")
+        End If
+        If oModel.hasByName("LblRole") Then
+            oDialogue.getControl("LblRole").setVisible(sTypeItem = "State")
         End If
         If oModel.hasByName("CmbActState") Then
             oDialogue.getControl("CmbActState").setVisible(sTypeItem = "Activity")
             oDialogue.getControl("CmbActState").setText("")
             oDialogue.getControl("CmbActState").Model.Enabled = False
+        End If
+        If oModel.hasByName("LblActState") Then
+            oDialogue.getControl("LblActState").setVisible(sTypeItem = "Activity")
         End If
         If oModel.hasByName("BtnActStates") Then
             oDialogue.getControl("BtnActStates").setVisible(sTypeItem = "Activity")
@@ -2429,7 +2795,7 @@ Sub ServSaveTxtTitle(oControlView As Object, oData As Object, nRowDestiny As Lon
     Dim sTitle As String
     
     ' Extract the clean text from the text field (TextField)
-    sTitle = Trim(oControlView.Text)
+    sTitle = WatermarkValue(oControlView)
     
     ' Write the value in Column B (index 1) of the corresponding row
     oData.getCellByPosition(1, nRowDestiny).String = sTitle
@@ -2442,7 +2808,7 @@ Sub ServSaveTxtDescription(oControlView As Object, oData As Object, nRowDestiny 
     Dim sDescription As String
     
     ' Extract the text from the description box (supports multi-line formatting)
-    sDescription = Trim(oControlView.Text)
+    sDescription = WatermarkValue(oControlView)
     
     ' Write the value in Column D (index 3) of the corresponding row.
     oData.getCellByPosition(3, nRowDestiny).String = sDescription
@@ -2719,6 +3085,7 @@ Sub EditActiveTask()
     
     ' 3. Invoke the Reading Hub with the selected ID (This will display BtnDelete and BtnTrash)
     Call InitializeDialogServices(oDialogue, IdActive)
+    Call ApplyWatermarks(oDialogue)
     
     ' 4. Execution of the dialogue
     If oDialogue.execute() = 1 Then
@@ -2752,6 +3119,7 @@ Sub AddNewTask()
     
     ' 2. Invoke the Reading Hub with ID = 0 (This will automatically hide BtnDelete and BtnTrash)
     Call InitializeDialogServices(oDialogue, 0)
+    Call ApplyWatermarks(oDialogue)
     
     ' 3. Smart pre-selection based on the Viewer's active filters
     sActivityFilter = Trim(oVisor.getCellByPosition(0, 1).String) ' Cell A2
@@ -2759,6 +3127,8 @@ Sub AddNewTask()
     
     If sActivityFilter <> "" Then
         oDialogue.getControl("CmbActivity").setText(sActivityFilter)
+        ' Ensure the state list matches the activity even if the event did not fire.
+        Call ServPopulateCmbState(oDialogue.getControl("CmbState").Model, oDialogue.getControl("CmbState"), oData, 0, sActivityFilter)
     End If
     
     If sStateFilter <> "" Then
@@ -2770,7 +3140,7 @@ Sub AddNewTask()
     ' 4. Execution of the dialogue
     If oDialogue.execute() = 1 Then
         ' Validation of mandatory fields
-        If Trim(oDialogue.getControl("TxtTitle").Text) = "" Then
+        If WatermarkValue(oDialogue.getControl("TxtTitle")) = "" Then
             MsgBox "The 'Activity' and the 'Task' name are mandatory..", 48, "Incomplete Fields"
         Else
             ' Save the new task to the database (ID = 0)
@@ -2826,6 +3196,7 @@ Sub OpenItemPanel()
     
     ' 2. Call the Reading Hub (ID = 0) to populate the "CmbItem" ComboBox.
     Call InitializeDialogServices(oDialogue, 0)
+    Call ApplyWatermarks(oDialogue)
     
     ' Initially disable the Accept button until the user types or selects something.
     oDialogue.getControl("BtnAccept").Model.Enabled = False
@@ -2846,11 +3217,11 @@ REM =========================================================================
 Sub SaveCatalogFromDialog(oEvent As Object)
     Dim oDialogue As Object, oCmb As Object
     Dim sItem As String, sNewName As String, sPos As String, sRoleLabel As String
-    Dim sRole As String, sTrash As String, sScopeLabel As String, sScope As String
+    Dim sRole As String, sTrash As String, sAddScope As String
     Dim sActStateLabel As String, sActState As String
     Dim vList() As String
     Dim bExist As Boolean, bName As Boolean, bPos As Boolean, bRole As Boolean
-    Dim bScope As Boolean, bActState As Boolean
+    Dim bActState As Boolean
     Dim nPos As Long, nCount As Long
     Dim answer As Integer
 
@@ -2864,18 +3235,20 @@ Sub SaveCatalogFromDialog(oEvent As Object)
     bExist = ElementExistInList(sItem, vList())
 
     If Not bExist Then
-        ' OPERATION: ADD NEW ELEMENT
+        ' OPERATION: ADD NEW ELEMENT (scope = selected container for states)
+        sAddScope = ""
+        If G_ManagedItemType = "State" Then sAddScope = GetSelectedScopeValue(oDialogue)
         answer = MsgBox("Do you want to add the new " & G_ManagedItemType & ": """ & sItem & """?", 4 + 32, "Confirm Addition")
         If answer = 6 Then
             oDialogue.endExecute()
-            Call AddCatalogItem(sItem, G_ManagedItemType)
+            Call AddCatalogItem(sItem, G_ManagedItemType, sAddScope)
         End If
         Exit Sub
     End If
 
     ' Existing item: determine the pending changes.
     nCount = CountCatalog(G_ManagedItemType)
-    sNewName = Trim(oDialogue.getControl("TxtNewName").Text)
+    sNewName = WatermarkValue(oDialogue.getControl("TxtNewName"))
     bName = (sNewName <> "" And LCase(sNewName) <> LCase(sItem))
 
     sPos = Trim(oDialogue.getControl("CmbPos").Text)
@@ -2884,33 +3257,26 @@ Sub SaveCatalogFromDialog(oEvent As Object)
 
     bRole = False
     sRole = ""
-    bScope = False
-    sScope = ""
     bActState = False
     sActState = ""
     If G_ManagedItemType = "State" Then
         sRoleLabel = Trim(oDialogue.getControl("CmbRole").Text)
         sRole = RoleLabelToValue(sRoleLabel)
         bRole = (sRole <> G_SelectedRole)
-
-        sScopeLabel = Trim(oDialogue.getControl("CmbScope").Text)
-        If LCase(sScopeLabel) = "general" Then sScopeLabel = ""
-        sScope = sScopeLabel
-        bScope = (LCase(sScope) <> LCase(G_SelectedScope))
     Else
         sActStateLabel = Trim(oDialogue.getControl("CmbActState").Text)
         sActState = ActivityStateLabelToValue(sActStateLabel)
         bActState = (LCase(sActState) <> LCase(G_SelectedActState))
     End If
 
-    If Not bName And Not bPos And Not bRole And Not bScope And Not bActState Then
+    If Not bName And Not bPos And Not bRole And Not bActState Then
         ' OPERATION: CASCADE ELIMINATION
         oDialogue.endExecute()
         Call RunCascadeDelete(sItem, G_ManagedItemType)
         Exit Sub
     End If
 
-    ' OPERATION: MODIFY (rename / position / role / scope / activity state)
+    ' OPERATION: MODIFY (rename / position / role / activity state)
     If bName Then
         answer = MsgBox("Rename " & G_ManagedItemType & ": """ & sItem & """ -> """ & sNewName & """?", 4 + 32, "Confirm Rename")
         If answer <> 6 Then Exit Sub
@@ -2925,7 +3291,7 @@ Sub SaveCatalogFromDialog(oEvent As Object)
     End If
 
     oDialogue.endExecute()
-    Call ModifyCatalogItem(sItem, sNewName, bName, bPos, nPos, bRole, sRole, bScope, sScope, bActState, sActState, G_ManagedItemType)
+    Call ModifyCatalogItem(sItem, sNewName, bName, bPos, nPos, bRole, sRole, False, "", bActState, sActState, G_ManagedItemType)
 End Sub
 
 REM =========================================================================
@@ -2933,9 +3299,10 @@ REM ACTIVITY-STATE CATALOG PANEL (COLUMNS M..P)
 REM =========================================================================
 
 REM Opens the activity-state catalog editor.
-Sub ManageActivityStates()
+Function ManageActivityStates() As Integer
     Dim oDialogue As Object
     Dim oData As Object
+    Dim nResult As Integer
 
     DialogLibraries.LoadLibrary("Standard")
     oDialogue = CreateUnoDialog(DialogLibraries.Standard.DialogPanelActState)
@@ -2958,18 +3325,27 @@ Sub ManageActivityStates()
     oDialogue.getControl("BtnAccept").Model.BackgroundColor = RGB(240, 240, 240)
     oDialogue.getControl("BtnAccept").Model.TextColor = RGB(0, 0, 0)
     G_UpdatingPanel = False
+    Call ApplyWatermarks(oDialogue)
 
     oDialogue.Title = "Manage Activity States"
-    oDialogue.execute()
+    nResult = oDialogue.execute()
     oDialogue.dispose()
-End Sub
+    ManageActivityStates = nResult
+End Function
 
 REM Opens the activity-state editor from the item panel.
 Sub OpenActivityStatesPanel(oEvent As Object)
+    Dim nResult As Integer
+
     On Error Resume Next
     oEvent.Source.Context.endExecute()
     On Error GoTo 0
-    Call ManageActivityStates()
+
+    nResult = ManageActivityStates()
+    If nResult = 0 Then
+        ' Cancel returns to the previous activity panel.
+        Call ManageActivityes()
+    End If
 End Sub
 
 REM Fills CmbItem with the activity-state names (column M).
@@ -3070,6 +3446,7 @@ Sub CmbActStateItemChanged(oEvent As Object)
         oDialogue.getControl("TxtMessage").Text = ""
     End If
     G_UpdatingPanel = False
+    Call ApplyWatermarks(oDialogue)
 
     Call UpdateActStatePanelButton(oEvent)
 End Sub
@@ -3109,21 +3486,53 @@ Sub UpdateActStatePanelButton(oEvent As Object)
     End If
 
     bChanged = False
-    sNewName = Trim(oDialogue.getControl("TxtNewName").Text)
-    If sNewName <> "" And LCase(sNewName) <> LCase(sText) Then bChanged = True
+    Dim bName As Boolean, bType As Boolean, bParam As Boolean, bMessage As Boolean
+    Dim sIcons As String
+    bName = False
+    bType = False
+    bParam = False
+    bMessage = False
+    sNewName = WatermarkValue(oDialogue.getControl("TxtNewName"))
+    If sNewName <> "" And LCase(sNewName) <> LCase(sText) Then
+        bName = True
+        bChanged = True
+    End If
     nRow = FindActStateRow(oData, sText)
     If nRow > 0 Then
         sType = Trim(oDialogue.getControl("CmbType").Text)
-        sParam = Trim(oDialogue.getControl("TxtParam").Text)
-        sMessage = Trim(oDialogue.getControl("TxtMessage").Text)
-        If LCase(sType) <> LCase(Trim(oData.getCellByPosition(13, nRow).String)) Then bChanged = True
-        If sParam <> Trim(oData.getCellByPosition(14, nRow).String) Then bChanged = True
-        If sMessage <> Trim(oData.getCellByPosition(15, nRow).String) Then bChanged = True
+        sParam = WatermarkValue(oDialogue.getControl("TxtParam"))
+        sMessage = WatermarkValue(oDialogue.getControl("TxtMessage"))
+        If LCase(sType) <> LCase(Trim(oData.getCellByPosition(13, nRow).String)) Then
+            bType = True
+            bChanged = True
+        End If
+        If sParam <> Trim(oData.getCellByPosition(14, nRow).String) Then
+            bParam = True
+            bChanged = True
+        End If
+        If sMessage <> Trim(oData.getCellByPosition(15, nRow).String) Then
+            bMessage = True
+            bChanged = True
+        End If
     End If
 
     If bChanged Then
+        sIcons = ""
+        If bName Then sIcons = sIcons & "[✎]"
+        If bType Then
+            If sIcons <> "" Then sIcons = sIcons & "&"
+            sIcons = sIcons & "[◈]"
+        End If
+        If bParam Then
+            If sIcons <> "" Then sIcons = sIcons & "&"
+            sIcons = sIcons & "[⏱]"
+        End If
+        If bMessage Then
+            If sIcons <> "" Then sIcons = sIcons & "&"
+            sIcons = sIcons & "[💬]"
+        End If
         oBtn.Enabled = True
-        oBtn.Label = "Modify"
+        oBtn.Label = "Modify" & sIcons
         oBtn.BackgroundColor = RGB(0, 123, 255)
         oBtn.TextColor = RGB(255, 255, 255)
     Else
@@ -3151,10 +3560,10 @@ Sub SaveActStateFromDialog(oEvent As Object)
     vList() = oDialogue.getControl("CmbItem").Model.StringItemList
     bExist = ElementExistInList(sText, vList())
 
-    sNewName = Trim(oDialogue.getControl("TxtNewName").Text)
+    sNewName = WatermarkValue(oDialogue.getControl("TxtNewName"))
     sType = LCase(Trim(oDialogue.getControl("CmbType").Text))
-    sParam = Trim(oDialogue.getControl("TxtParam").Text)
-    sMessage = Trim(oDialogue.getControl("TxtMessage").Text)
+    sParam = WatermarkValue(oDialogue.getControl("TxtParam"))
+    sMessage = WatermarkValue(oDialogue.getControl("TxtMessage"))
     If sNewName = "" Then sNewName = sText
 
     If Not bExist Then

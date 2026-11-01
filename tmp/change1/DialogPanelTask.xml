@@ -7,13 +7,22 @@
   <dlg:style dlg:style-id="2" dlg:font-height="18"/>
  </dlg:styles>
  <dlg:bulletinboard>
-  <dlg:combobox dlg:id="CmbState" dlg:tab-index="4" dlg:left="8" dlg:top="3" dlg:width="38" dlg:height="16" dlg:spin="true"/>
-  <dlg:combobox dlg:id="NumPosition" dlg:tab-index="6" dlg:left="99" dlg:top="5" dlg:width="38" dlg:height="16" dlg:spin="true"/>
-  <dlg:combobox dlg:id="CmbActivity" dlg:tab-index="5" dlg:left="153" dlg:top="5" dlg:width="38" dlg:height="16" dlg:spin="true">
+  <dlg:text dlg:id="LblState" dlg:left="8" dlg:top="1" dlg:width="38" dlg:height="8" dlg:value="State"/>
+  <dlg:text dlg:id="LblPos" dlg:left="99" dlg:top="1" dlg:width="38" dlg:height="8" dlg:value="Pos."/>
+  <dlg:text dlg:id="LblActivity" dlg:left="153" dlg:top="1" dlg:width="60" dlg:height="8" dlg:value="Activity"/>
+  <dlg:combobox dlg:id="CmbState" dlg:tab-index="4" dlg:left="8" dlg:top="9" dlg:width="38" dlg:height="14" dlg:spin="true"/>
+  <dlg:combobox dlg:id="NumPosition" dlg:tab-index="6" dlg:left="99" dlg:top="9" dlg:width="38" dlg:height="14" dlg:spin="true"/>
+  <dlg:combobox dlg:id="CmbActivity" dlg:tab-index="5" dlg:left="153" dlg:top="9" dlg:width="60" dlg:height="14" dlg:spin="true">
    <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.CmbActivityChanged?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:combobox>
-  <dlg:textfield dlg:id="TxtTitle" dlg:tab-index="3" dlg:left="4" dlg:top="27" dlg:width="157" dlg:height="18"/>
-  <dlg:textfield dlg:style-id="0" dlg:id="TxtDescription" dlg:tab-index="2" dlg:left="3" dlg:top="49" dlg:width="214" dlg:height="153" dlg:vscroll="true" dlg:multiline="true"/>
+  <dlg:textfield dlg:id="TxtTitle" dlg:tab-index="3" dlg:left="4" dlg:top="27" dlg:width="157" dlg:height="18">
+   <script:event script:event-name="on-focus" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkFocus?language=Basic&amp;location=document" script:language="Script"/>
+   <script:event script:event-name="on-blur" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkBlur?language=Basic&amp;location=document" script:language="Script"/>
+  </dlg:textfield>
+  <dlg:textfield dlg:style-id="0" dlg:id="TxtDescription" dlg:tab-index="2" dlg:left="3" dlg:top="49" dlg:width="214" dlg:height="153" dlg:vscroll="true" dlg:multiline="true">
+   <script:event script:event-name="on-focus" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkFocus?language=Basic&amp;location=document" script:language="Script"/>
+   <script:event script:event-name="on-blur" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkBlur?language=Basic&amp;location=document" script:language="Script"/>
+  </dlg:textfield>
   <dlg:button dlg:style-id="1" dlg:id="BtnDelete" dlg:tab-index="7" dlg:left="4" dlg:top="207" dlg:width="20" dlg:height="16" dlg:value="⮿">
    <script:event script:event-name="on-performaction" script:macro-name="vnd.sun.star.script:Standard.Module1.DeleteActiveTask?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:button>

@@ -1,8 +1,9 @@
 """Populate canban_draft.ods with atomic sample data for Change 3.
 
-Run after build_draft_ods.py. It opens the draft, writes the sample
-activity states, activities, scoped states and task assignments, then
-stores the document in place.
+Run after build_draft_ods.py. The sample covers every activity-state
+condition type, general and scoped task states, and per-activity base
+states. It finishes by leaving the blocked "Personal" activity selected
+so the startup access service can be observed on the next open.
 """
 import os
 import subprocess
@@ -34,21 +35,35 @@ ACTIVITIES = [
     (1, "Personal", "suspended"),
     (2, "School", "scheduled"),
     (3, "Archive", "expired"),
-    (4, "Ideas", "active"),
+    (4, "Work", "active"),
+    (5, "Ideas", "active"),
 ]
 
 # Task states: J=name, K=role, L=scope (owner activity, empty = general).
 SCOPED_STATES = [
-    (4, "Essay", "", "School"),
-    (5, "Thesis", "base", "School"),
-    (6, "Errands", "", "Personal"),
+    (4, "Urgent", "", "Personal"),
+    (5, "Errands", "", "Personal"),
+    (6, "Homework", "base", "School"),
+    (7, "Study", "", "School"),
+    (8, "Meeting", "", "Work"),
+    (9, "Report", "base", "Work"),
 ]
 
-# Task assignments: row, state.
+# Existing task row -> state.
 TASK_STATES = [
+    (2, "Urgent"),
     (3, "Errands"),
-    (5, "Thesis"),
-    (6, "Essay"),
+    (4, "Homework"),
+    (5, "Study"),
+    (6, "Homework"),
+]
+
+# New tasks: row, activity, title, state, description, order, id.
+NEW_TASKS = [
+    (7, "Work", "Prepare quarterly report", "Report",
+     "Draft and review the quarterly numbers", 7, 7),
+    (8, "Work", "Team meeting", "Meeting",
+     "Weekly sync with the team", 8, 8),
 ]
 
 
@@ -112,13 +127,29 @@ def main() -> None:
             data.getCellByPosition(10, row).String = role
             data.getCellByPosition(11, row).String = scope
 
-        # 4. Task assignments to scoped states.
+        # 4. Existing task state assignments.
         for row, state in TASK_STATES:
             data.getCellByPosition(2, row).String = state
 
-        # 5. Show one general and one scoped state on the board.
-        view.getCellByPosition(0, 2).String = "In progress"
-        view.getCellByPosition(1, 2).String = "Errands"
+        # 5. New tasks for the Work activity.
+        for row, activity, title, state, description, order, task_id in NEW_TASKS:
+            data.getCellByPosition(0, row).String = activity
+            data.getCellByPosition(1, row).String = title
+            data.getCellByPosition(2, row).String = state
+            data.getCellByPosition(3, row).String = description
+            data.getCellByPosition(4, row).Value = order
+            data.getCellByPosition(5, row).Value = task_id
+
+        # 6. Show the accessible Work states on the board.
+        view.getCellByPosition(0, 2).String = "Report"
+        view.getCellByPosition(1, 2).String = "Meeting"
+
+        # 7. Leave the blocked activity selected so the startup service can
+        #    switch to an accessible one on the next open.
+        provider = doc.getScriptProvider()
+        script = provider.getScript(
+            "vnd.sun.star.script:Standard.Module1.SetActivityFilterSilently?language=Basic&location=document")
+        script.invoke(("Personal",), (), ())
 
         doc.store()
         doc.close(True)

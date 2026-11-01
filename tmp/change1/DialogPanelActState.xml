@@ -1,24 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE dlg:window PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "dialog.dtd">
-<dlg:window xmlns:dlg="http://openoffice.org/2000/dialog" xmlns:script="http://openoffice.org/2000/script" dlg:id="DialogPanelActState" dlg:left="41" dlg:top="26" dlg:width="260" dlg:height="150" dlg:closeable="true" dlg:moveable="true">
+<dlg:window xmlns:dlg="http://openoffice.org/2000/dialog" xmlns:script="http://openoffice.org/2000/script" dlg:id="DialogPanelActState" dlg:left="41" dlg:top="20" dlg:width="260" dlg:height="186" dlg:closeable="true" dlg:moveable="true">
  <dlg:bulletinboard>
-  <dlg:combobox dlg:id="CmbItem" dlg:tab-index="1" dlg:left="8" dlg:top="5" dlg:width="244" dlg:height="18" dlg:spin="true">
+  <dlg:text dlg:id="LblItem" dlg:left="8" dlg:top="2" dlg:width="244" dlg:height="10" dlg:value="Activity state (select or type a new one)"/>
+  <dlg:combobox dlg:id="CmbItem" dlg:tab-index="1" dlg:left="8" dlg:top="13" dlg:width="244" dlg:height="18" dlg:spin="true">
    <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.CmbActStateItemChanged?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:combobox>
-  <dlg:textfield dlg:id="TxtNewName" dlg:tab-index="2" dlg:left="8" dlg:top="27" dlg:width="244" dlg:height="18">
+  <dlg:text dlg:id="LblNewName" dlg:left="8" dlg:top="34" dlg:width="244" dlg:height="10" dlg:value="New name (for the selected state)"/>
+  <dlg:textfield dlg:id="TxtNewName" dlg:tab-index="2" dlg:left="8" dlg:top="45" dlg:width="244" dlg:height="18">
    <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.UpdateActStatePanelButton?language=Basic&amp;location=document" script:language="Script"/>
+   <script:event script:event-name="on-focus" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkFocus?language=Basic&amp;location=document" script:language="Script"/>
+   <script:event script:event-name="on-blur" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkBlur?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:textfield>
-  <dlg:combobox dlg:id="CmbType" dlg:tab-index="3" dlg:left="8" dlg:top="49" dlg:width="100" dlg:height="18" dlg:spin="true">
+  <dlg:text dlg:id="LblType" dlg:left="8" dlg:top="66" dlg:width="100" dlg:height="10" dlg:value="Condition type"/>
+  <dlg:text dlg:id="LblParam" dlg:left="112" dlg:top="66" dlg:width="140" dlg:height="10" dlg:value="Date (YYYY-MM-DD)"/>
+  <dlg:combobox dlg:id="CmbType" dlg:tab-index="3" dlg:left="8" dlg:top="77" dlg:width="100" dlg:height="18" dlg:spin="true">
    <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.UpdateActStatePanelButton?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:combobox>
-  <dlg:textfield dlg:id="TxtParam" dlg:tab-index="4" dlg:left="112" dlg:top="49" dlg:width="140" dlg:height="18">
+  <dlg:textfield dlg:id="TxtParam" dlg:tab-index="4" dlg:left="112" dlg:top="77" dlg:width="140" dlg:height="18">
    <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.UpdateActStatePanelButton?language=Basic&amp;location=document" script:language="Script"/>
+   <script:event script:event-name="on-focus" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkFocus?language=Basic&amp;location=document" script:language="Script"/>
+   <script:event script:event-name="on-blur" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkBlur?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:textfield>
-  <dlg:textfield dlg:id="TxtMessage" dlg:tab-index="5" dlg:left="8" dlg:top="71" dlg:width="244" dlg:height="46" dlg:multiline="true" dlg:vscroll="true">
+  <dlg:text dlg:id="LblMessage" dlg:left="8" dlg:top="98" dlg:width="244" dlg:height="10" dlg:value="Message shown when blocked"/>
+  <dlg:textfield dlg:id="TxtMessage" dlg:tab-index="5" dlg:left="8" dlg:top="109" dlg:width="244" dlg:height="46" dlg:multiline="true" dlg:vscroll="true">
    <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.UpdateActStatePanelButton?language=Basic&amp;location=document" script:language="Script"/>
+   <script:event script:event-name="on-focus" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkFocus?language=Basic&amp;location=document" script:language="Script"/>
+   <script:event script:event-name="on-blur" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkBlur?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:textfield>
-  <dlg:button dlg:id="BtnCancel" dlg:tab-index="0" dlg:left="8" dlg:top="124" dlg:width="55" dlg:height="18" dlg:value="Cancel" dlg:button-type="cancel"/>
-  <dlg:button dlg:id="BtnAccept" dlg:tab-index="6" dlg:left="128" dlg:top="124" dlg:width="124" dlg:height="18">
+  <dlg:button dlg:id="BtnCancel" dlg:tab-index="0" dlg:left="8" dlg:top="162" dlg:width="55" dlg:height="18" dlg:value="Cancel" dlg:button-type="cancel"/>
+  <dlg:button dlg:id="BtnAccept" dlg:tab-index="6" dlg:left="128" dlg:top="162" dlg:width="124" dlg:height="18">
    <script:event script:event-name="on-performaction" script:macro-name="vnd.sun.star.script:Standard.Module1.SaveActStateFromDialog?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:button>
  </dlg:bulletinboard>

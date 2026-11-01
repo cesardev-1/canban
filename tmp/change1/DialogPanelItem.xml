@@ -1,30 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE dlg:window PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "dialog.dtd">
-<dlg:window xmlns:dlg="http://openoffice.org/2000/dialog" xmlns:script="http://openoffice.org/2000/script" dlg:id="DialogPanelItem" dlg:left="41" dlg:top="26" dlg:width="260" dlg:height="122" dlg:closeable="true" dlg:moveable="true">
+<dlg:window xmlns:dlg="http://openoffice.org/2000/dialog" xmlns:script="http://openoffice.org/2000/script" dlg:id="DialogPanelItem" dlg:left="41" dlg:top="20" dlg:width="260" dlg:height="178" dlg:closeable="true" dlg:moveable="true">
  <dlg:bulletinboard>
-  <dlg:combobox dlg:id="CmbItem" dlg:tab-index="1" dlg:left="8" dlg:top="5" dlg:width="244" dlg:height="18" dlg:spin="true">
+  <dlg:text dlg:id="LblScope" dlg:left="8" dlg:top="2" dlg:width="244" dlg:height="10" dlg:value="Scope (General or activity)"/>
+  <dlg:combobox dlg:id="CmbScope" dlg:tab-index="1" dlg:left="8" dlg:top="13" dlg:width="244" dlg:height="18" dlg:spin="true">
+   <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.CmbScopeChanged?language=Basic&amp;location=document" script:language="Script"/>
+  </dlg:combobox>
+  <dlg:text dlg:id="LblItem" dlg:left="8" dlg:top="34" dlg:width="244" dlg:height="10" dlg:value="Item (select or type a new one)"/>
+  <dlg:combobox dlg:id="CmbItem" dlg:tab-index="2" dlg:left="8" dlg:top="45" dlg:width="244" dlg:height="18" dlg:spin="true">
    <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.CmbItemSelectionChanged?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:combobox>
-  <dlg:textfield dlg:id="TxtNewName" dlg:tab-index="2" dlg:left="8" dlg:top="27" dlg:width="244" dlg:height="18">
+  <dlg:text dlg:id="LblNewName" dlg:left="8" dlg:top="66" dlg:width="244" dlg:height="10" dlg:value="New name (for the selected item)"/>
+  <dlg:textfield dlg:id="TxtNewName" dlg:tab-index="3" dlg:left="8" dlg:top="77" dlg:width="244" dlg:height="18">
    <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.UpdateItemPanelButton?language=Basic&amp;location=document" script:language="Script"/>
+   <script:event script:event-name="on-focus" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkFocus?language=Basic&amp;location=document" script:language="Script"/>
+   <script:event script:event-name="on-blur" script:macro-name="vnd.sun.star.script:Standard.Module1.WatermarkBlur?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:textfield>
-  <dlg:combobox dlg:id="CmbPos" dlg:tab-index="3" dlg:left="8" dlg:top="49" dlg:width="45" dlg:height="18" dlg:spin="true">
+  <dlg:text dlg:id="LblPos" dlg:left="8" dlg:top="98" dlg:width="45" dlg:height="10" dlg:value="Position"/>
+  <dlg:text dlg:id="LblRole" dlg:left="58" dlg:top="98" dlg:width="70" dlg:height="10" dlg:value="Role"/>
+  <dlg:text dlg:id="LblActState" dlg:left="58" dlg:top="98" dlg:width="194" dlg:height="10" dlg:value="Activity state"/>
+  <dlg:combobox dlg:id="CmbPos" dlg:tab-index="4" dlg:left="8" dlg:top="109" dlg:width="45" dlg:height="18" dlg:spin="true">
    <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.UpdateItemPanelButton?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:combobox>
-  <dlg:combobox dlg:id="CmbRole" dlg:tab-index="4" dlg:left="58" dlg:top="49" dlg:width="70" dlg:height="18" dlg:spin="true">
+  <dlg:combobox dlg:id="CmbRole" dlg:tab-index="5" dlg:left="58" dlg:top="109" dlg:width="70" dlg:height="18" dlg:spin="true">
    <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.UpdateItemPanelButton?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:combobox>
-  <dlg:combobox dlg:id="CmbScope" dlg:tab-index="5" dlg:left="133" dlg:top="49" dlg:width="119" dlg:height="18" dlg:spin="true">
+  <dlg:combobox dlg:id="CmbActState" dlg:tab-index="6" dlg:left="58" dlg:top="109" dlg:width="194" dlg:height="18" dlg:spin="true">
    <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.UpdateItemPanelButton?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:combobox>
-  <dlg:combobox dlg:id="CmbActState" dlg:tab-index="6" dlg:left="58" dlg:top="49" dlg:width="194" dlg:height="18" dlg:spin="true">
-   <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.UpdateItemPanelButton?language=Basic&amp;location=document" script:language="Script"/>
-  </dlg:combobox>
-  <dlg:button dlg:id="BtnActStates" dlg:tab-index="7" dlg:left="8" dlg:top="73" dlg:width="110" dlg:height="18" dlg:value="Activity states...">
+  <dlg:button dlg:id="BtnActStates" dlg:tab-index="7" dlg:left="8" dlg:top="131" dlg:width="110" dlg:height="18" dlg:value="Activity states...">
    <script:event script:event-name="on-performaction" script:macro-name="vnd.sun.star.script:Standard.Module1.OpenActivityStatesPanel?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:button>
-  <dlg:button dlg:id="BtnCancel" dlg:tab-index="0" dlg:left="8" dlg:top="98" dlg:width="55" dlg:height="18" dlg:value="Cancel" dlg:button-type="cancel"/>
-  <dlg:button dlg:id="BtnAccept" dlg:tab-index="8" dlg:left="128" dlg:top="98" dlg:width="124" dlg:height="18">
+  <dlg:button dlg:id="BtnCancel" dlg:tab-index="0" dlg:left="8" dlg:top="153" dlg:width="55" dlg:height="18" dlg:value="Cancel" dlg:button-type="cancel"/>
+  <dlg:button dlg:id="BtnAccept" dlg:tab-index="8" dlg:left="128" dlg:top="153" dlg:width="124" dlg:height="18">
    <script:event script:event-name="on-performaction" script:macro-name="vnd.sun.star.script:Standard.Module1.SaveCatalogFromDialog?language=Basic&amp;location=document" script:language="Script"/>
   </dlg:button>
  </dlg:bulletinboard>
