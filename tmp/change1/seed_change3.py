@@ -35,8 +35,8 @@ ACTIVITIES = [
     (1, "Personal", "suspended"),
     (2, "School", "scheduled"),
     (3, "Archive", "expired"),
-    (4, "Work", "active"),
-    (5, "Ideas", "active"),
+    (4, "Work", ""),
+    (5, "Ideas", ""),
 ]
 
 # Task states: J=name, K=role, L=scope (owner activity, empty = general).

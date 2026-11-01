@@ -416,9 +416,12 @@ Function GetActivityStates() As Variant
 
     ReDim vStates(TotalRows - 2)
     n = 0
+    Dim sVal As String
     For i = 1 To TotalRows - 1
         If Trim(oData.getCellByPosition(7, i).String) <> "" Then
-            vStates(n) = Trim(oData.getCellByPosition(8, i).String)
+            sVal = Trim(oData.getCellByPosition(8, i).String)
+            If LCase(sVal) = "active" Then sVal = ""
+            vStates(n) = sVal
             n = n + 1
         End If
     Next i
@@ -552,42 +555,67 @@ Sub CompactCatalog(sType As String)
 End Sub
 
 REM Adds a new element at the end of the catalog.
-Sub AddCatalogItem(sName As String, sType As String, Optional sScope As String)
-    Dim oDoc As Object, oData As Object
-    Dim nCol As Long, nMaxRow As Long, i As Long, nFree As Long
+Sub AddCatalogItem(sName As String, sType As String, Optional sScope As String, Optional nPos As Long, Optional sRole As String, Optional sActState As String)
+    Dim vNames As Variant, vAux1 As Variant, vAux2 As Variant
+    Dim vOutNames() As Variant, vOutAux1() As Variant, vOutAux2() As Variant
+    Dim i As Long, n As Long, nCount As Long, nAt As Long
+    Dim bState As Boolean
+    Dim sA As String
 
     If IsMissing(sScope) Then sScope = ""
+    If IsMissing(nPos) Then nPos = 0
+    If IsMissing(sRole) Then sRole = ""
+    If IsMissing(sActState) Then sActState = ""
 
-    oDoc = ThisComponent
-    oData = oDoc.Sheets.getByName("data")
-    nCol = GetCatalogColumn(sType)
-    nMaxRow = GetCatalogMaxRow(sType)
+    bState = (sType = "State")
+    vNames = GetCatalogNames(sType)
+    If bState Then
+        vAux1 = GetStateRoles()
+        vAux2 = GetStateScopes()
+    Else
+        vAux1 = GetActivityStates()
+    End If
 
-    ' Normalize the catalog so the new element is appended after the last one.
-    Call CompactCatalog(sType)
+    nCount = 0
+    For i = 0 To UBound(vNames)
+        If Trim(CStr(vNames(i))) <> "" Then nCount = nCount + 1
+    Next i
 
-    nFree = -1
-    For i = 1 To nMaxRow
-        If Trim(oData.getCellByPosition(nCol, i).String) = "" Then
-            nFree = i
-            Exit For
+    ' Determine the insertion index (0-based) for the new element.
+    If nPos < 1 Or nPos > nCount + 1 Then
+        nAt = nCount
+    Else
+        nAt = nPos - 1
+    End If
+
+    ReDim vOutNames(nCount)
+    ReDim vOutAux1(nCount)
+    If bState Then ReDim vOutAux2(nCount)
+
+    n = 0
+    For i = 0 To UBound(vNames)
+        If Trim(CStr(vNames(i))) <> "" Then
+            If n = nAt Then n = n + 1
+            vOutNames(n) = vNames(i)
+            vOutAux1(n) = vAux1(i)
+            If bState Then vOutAux2(n) = vAux2(i)
+            n = n + 1
         End If
     Next i
 
-    If nFree = -1 Then
-        MsgBox "Error: The catalog of " & sType & " is full.", 48, "Limit Exceeded"
-        Exit Sub
-    End If
-
-    oData.getCellByPosition(nCol, nFree).String = sName
-    If sType = "State" Then
-        oData.getCellByPosition(10, nFree).String = ""
-        oData.getCellByPosition(11, nFree).String = Trim(sScope)
+    vOutNames(nAt) = sName
+    If bState Then
+        vOutAux1(nAt) = LCase(Trim(sRole))
+        vOutAux2(nAt) = Trim(sScope)
+        Call WriteStateCatalog(vOutNames, vOutAux1, vOutAux2)
     Else
-        oData.getCellByPosition(8, nFree).String = ""
+        sA = Trim(sActState)
+        If LCase(sA) = "active" Then sA = ""
+        vOutAux1(nAt) = sA
+        Call WriteActivityCatalog(vOutNames, vOutAux1)
     End If
 
-    If sType = "State" Then Call RefreshBoardStateFilters()
+    If bState Then Call RefreshBoardStateFilters()
     Call CustomDataSort()
     MsgBox sType & " successfully added to the catalog.", 64, "Success"
 End Sub
@@ -889,20 +917,32 @@ End Sub
 REM Populates the activity-state combo (Active + catalog) and selects the current state.
 Sub PopulateCmbActState(oDialogue As Object, sItem As String)
     Dim vStates As Variant, vList() As String
-    Dim sState As String
+    Dim sState As String, sLabel As String
     Dim i As Long, n As Long
+    Dim bHasActive As Boolean
 
     vStates = GetActStateNames()
     ReDim vList(UBound(vStates) + 1)
-    vList(0) = "Active"
-    n = 1
+    n = 0
+    bHasActive = False
     For i = 0 To UBound(vStates)
         If Trim(CStr(vStates(i))) <> "" Then
             vList(n) = CStr(vStates(i))
+            If LCase(Trim(CStr(vStates(i)))) = "active" Then bHasActive = True
             n = n + 1
         End If
     Next i
-    If n > 1 Then
+
+    ' Ensure there is an "active" option (the catalog should provide it).
+    If Not bHasActive Then
+        For i = n To 1 Step -1
+            vList(i) = vList(i - 1)
+        Next i
+        vList(0) = "Active"
+        n = n + 1
+    End If
+
+    If n > 0 Then
         ReDim Preserve vList(n - 1)
     Else
         ReDim vList(0)
@@ -911,16 +951,72 @@ Sub PopulateCmbActState(oDialogue As Object, sItem As String)
 
     sState = GetActivityStateName(sItem)
     G_SelectedActState = sState
+    sLabel = ""
+    If Trim(sState) = "" Then
+        For i = 0 To UBound(vList)
+            If LCase(Trim(vList(i))) = "active" Then
+                sLabel = vList(i)
+                Exit For
+            End If
+        Next i
+    Else
+        sLabel = sState
+    End If
 
     G_UpdatingPanel = True
     oDialogue.getControl("CmbActState").Model.StringItemList = vList()
-    If Trim(sState) = "" Then
-        oDialogue.getControl("CmbActState").setText("Active")
-    Else
-        oDialogue.getControl("CmbActState").setText(sState)
-    End If
+    oDialogue.getControl("CmbActState").setText(sLabel)
     oDialogue.getControl("CmbActState").Model.Enabled = True
     G_UpdatingPanel = False
+End Sub
+
+REM Prepares the selector controls for adding a new element.
+Sub PopulateAddDefaults(oDialogue As Object)
+    Dim vList() As String
+    Dim vRoles(2) As String
+    Dim i As Long, nCount As Long
+
+    If G_ManagedItemType = "State" Then
+        nCount = CountCatalog("State") + 1
+        If nCount < 1 Then nCount = 1
+        ReDim vList(nCount)
+        For i = 1 To nCount
+            vList(i - 1) = CStr(i)
+        Next i
+        vList(nCount) = "F"
+
+        vRoles(0) = "Normal"
+        vRoles(1) = "Base"
+        vRoles(2) = "Trash"
+
+        G_UpdatingPanel = True
+        oDialogue.getControl("CmbPos").Model.StringItemList = vList()
+        oDialogue.getControl("CmbPos").setText("F")
+        oDialogue.getControl("CmbPos").Model.Enabled = True
+        oDialogue.getControl("CmbRole").Model.StringItemList = vRoles()
+        oDialogue.getControl("CmbRole").setText("Normal")
+        oDialogue.getControl("CmbRole").Model.Enabled = True
+        G_UpdatingPanel = False
+        G_SelectedPos = 0
+        G_SelectedRole = ""
+    Else
+        nCount = CountCatalog("Activity") + 1
+        If nCount < 1 Then nCount = 1
+        ReDim vList(nCount)
+        For i = 1 To nCount
+            vList(i - 1) = CStr(i)
+        Next i
+        vList(nCount) = "F"
+
+        G_UpdatingPanel = True
+        oDialogue.getControl("CmbPos").Model.StringItemList = vList()
+        oDialogue.getControl("CmbPos").setText("F")
+        oDialogue.getControl("CmbPos").Model.Enabled = True
+        G_UpdatingPanel = False
+        G_SelectedPos = 0
+        G_SelectedActState = ""
+        Call PopulateCmbActState(oDialogue, "")
+    End If
 End Sub
 
 REM Enables or disables the position and role controls.
@@ -992,7 +1088,7 @@ Sub CmbItemSelectionChanged(oEvent As Object)
         G_SelectedRole = ""
         G_SelectedScope = ""
         G_SelectedActState = ""
-        Call SetSelectionControlsEnabled(oDialogue, False)
+        Call PopulateAddDefaults(oDialogue)
     End If
 
     Call UpdateItemPanelButton(oEvent)
@@ -1330,7 +1426,11 @@ Function GetActivityStateName(sActivity As String) As String
 
     For i = 1 To TotalRows - 1
         If LCase(Trim(oData.getCellByPosition(7, i).String)) = sTarget Then
-            GetActivityStateName = Trim(oData.getCellByPosition(8, i).String)
+            Dim sVal As String
+            sVal = Trim(oData.getCellByPosition(8, i).String)
+            ' "active" is equivalent to an empty activity state.
+            If LCase(sVal) = "active" Then sVal = ""
+            GetActivityStateName = sVal
             Exit Function
         End If
     Next i
@@ -1349,7 +1449,10 @@ Sub SetActivityState(sActivity As String, sState As String)
 
     For i = 1 To TotalRows - 1
         If LCase(Trim(oData.getCellByPosition(7, i).String)) = LCase(Trim(sActivity)) Then
-            oData.getCellByPosition(8, i).String = Trim(sState)
+            Dim sVal As String
+            sVal = Trim(sState)
+            If LCase(sVal) = "active" Then sVal = ""
+            oData.getCellByPosition(8, i).String = sVal
             Exit Sub
         End If
     Next i
@@ -1645,11 +1748,65 @@ Sub ApplyBoardStateList(oCell As Object)
 End Sub
 
 REM Rebuilds the filtered board state list (helper column Q) and A3/B3 validations.
+REM Returns the two default board states (general base states, with fallback).
+Sub GetDefaultBoardStates(ByRef sFirst As String, ByRef sSecond As String)
+    Dim oData As Object, oCursor As Object
+    Dim TotalRows As Long, i As Long
+    Dim nBase As Long, nGen As Long
+    Dim vBase() As String, vGen() As String
+    Dim sState As String, sRole As String, sScope As String
+
+    oData = ThisComponent.Sheets.getByName("data")
+    oCursor = oData.createCursor()
+    oCursor.gotoEndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.EndRow + 1
+    ReDim vBase(TotalRows)
+    ReDim vGen(TotalRows)
+    nBase = 0
+    nGen = 0
+
+    For i = 1 To TotalRows - 1
+        sState = Trim(oData.getCellByPosition(9, i).String)
+        sRole = LCase(Trim(oData.getCellByPosition(10, i).String))
+        sScope = Trim(oData.getCellByPosition(11, i).String)
+        If sState <> "" And sScope = "" And sRole <> "trash" Then
+            vGen(nGen) = sState
+            nGen = nGen + 1
+            If sRole = "base" Then
+                vBase(nBase) = sState
+                nBase = nBase + 1
+            End If
+        End If
+    Next i
+
+    sFirst = ""
+    sSecond = ""
+    If nBase >= 2 Then
+        sFirst = vBase(0)
+        sSecond = vBase(1)
+    ElseIf nBase = 1 Then
+        sFirst = vBase(0)
+        For i = 0 To nGen - 1
+            If LCase(vGen(i)) <> LCase(sFirst) Then
+                sSecond = vGen(i)
+                Exit For
+            End If
+        Next i
+    Else
+        If nGen >= 2 Then
+            sFirst = vGen(0)
+            sSecond = vGen(1)
+        ElseIf nGen = 1 Then
+            sFirst = vGen(0)
+        End If
+    End If
+End Sub
+
 Sub RefreshBoardStateFilters()
     Dim oData As Object, oVisor As Object
     Dim TotalRows As Long, i As Long, nMax As Long
     Dim vList As Variant
-    Dim sAct As String
+    Dim sAct As String, sDefA As String, sDefB As String
 
     oData = ThisComponent.Sheets.getByName("data")
     oVisor = ThisComponent.Sheets.getByName("view")
@@ -1669,12 +1826,24 @@ Sub RefreshBoardStateFilters()
     Call ApplyBoardStateList(oVisor.getCellByPosition(0, 2))
     Call ApplyBoardStateList(oVisor.getCellByPosition(1, 2))
 
+    Call GetDefaultBoardStates(sDefA, sDefB)
+
     G_BoardFilterBusy = True
     If Not ValueInArray(vList, Trim(oVisor.getCellByPosition(0, 2).String)) Then
-        oVisor.getCellByPosition(0, 2).String = ""
+        oVisor.getCellByPosition(0, 2).String = sDefA
     End If
     If Not ValueInArray(vList, Trim(oVisor.getCellByPosition(1, 2).String)) Then
-        oVisor.getCellByPosition(1, 2).String = ""
+        oVisor.getCellByPosition(1, 2).String = sDefB
+    End If
+    ' Avoid identical columns when possible.
+    If Trim(oVisor.getCellByPosition(0, 2).String) <> "" Then
+        If LCase(Trim(oVisor.getCellByPosition(0, 2).String)) = LCase(Trim(oVisor.getCellByPosition(1, 2).String)) Then
+            If LCase(Trim(sDefB)) <> LCase(Trim(oVisor.getCellByPosition(0, 2).String)) Then
+                oVisor.getCellByPosition(1, 2).String = sDefB
+            ElseIf LCase(Trim(sDefA)) <> LCase(Trim(oVisor.getCellByPosition(0, 2).String)) Then
+                oVisor.getCellByPosition(1, 2).String = sDefA
+            End If
+        End If
     End If
     G_BoardFilterBusy = False
 End Sub
@@ -2311,9 +2480,6 @@ Sub InitializeDialogServices(oDialogue As Object, IdActive As Long)
         End If
         If oModel.hasByName("LblActState") Then
             oDialogue.getControl("LblActState").setVisible(sTypeItem = "Activity")
-        End If
-        If oModel.hasByName("BtnActStates") Then
-            oDialogue.getControl("BtnActStates").setVisible(sTypeItem = "Activity")
         End If
         G_UpdatingPanel = False
     End If
@@ -3218,11 +3384,12 @@ Sub SaveCatalogFromDialog(oEvent As Object)
     Dim oDialogue As Object, oCmb As Object
     Dim sItem As String, sNewName As String, sPos As String, sRoleLabel As String
     Dim sRole As String, sTrash As String, sAddScope As String
+    Dim sAddRole As String, sAddActState As String
     Dim sActStateLabel As String, sActState As String
     Dim vList() As String
     Dim bExist As Boolean, bName As Boolean, bPos As Boolean, bRole As Boolean
     Dim bActState As Boolean
-    Dim nPos As Long, nCount As Long
+    Dim nPos As Long, nCount As Long, nAddPos As Long
     Dim answer As Integer
 
     oDialogue = oEvent.Source.Context
@@ -3235,13 +3402,32 @@ Sub SaveCatalogFromDialog(oEvent As Object)
     bExist = ElementExistInList(sItem, vList())
 
     If Not bExist Then
-        ' OPERATION: ADD NEW ELEMENT (scope = selected container for states)
+        ' OPERATION: ADD NEW ELEMENT (position, role and activity state apply).
         sAddScope = ""
-        If G_ManagedItemType = "State" Then sAddScope = GetSelectedScopeValue(oDialogue)
+        sAddRole = ""
+        sAddActState = ""
+        nAddPos = 0
+        If G_ManagedItemType = "State" Then
+            sAddScope = GetSelectedScopeValue(oDialogue)
+            sAddRole = RoleLabelToValue(Trim(oDialogue.getControl("CmbRole").Text))
+            sPos = Trim(oDialogue.getControl("CmbPos").Text)
+            If sPos <> "" And UCase(sPos) <> "F" And IsNumeric(sPos) Then nAddPos = CLng(sPos)
+            If LCase(sAddRole) = "trash" Then
+                sTrash = GetTrashStateName()
+                If sTrash <> "" Then
+                    MsgBox "A trash state already exists: """ & sTrash & """. Set it back to normal first.", 48, "State Role"
+                    Exit Sub
+                End If
+            End If
+        Else
+            sPos = Trim(oDialogue.getControl("CmbPos").Text)
+            If sPos <> "" And UCase(sPos) <> "F" And IsNumeric(sPos) Then nAddPos = CLng(sPos)
+            sAddActState = ActivityStateLabelToValue(Trim(oDialogue.getControl("CmbActState").Text))
+        End If
         answer = MsgBox("Do you want to add the new " & G_ManagedItemType & ": """ & sItem & """?", 4 + 32, "Confirm Addition")
         If answer = 6 Then
             oDialogue.endExecute()
-            Call AddCatalogItem(sItem, G_ManagedItemType, sAddScope)
+            Call AddCatalogItem(sItem, G_ManagedItemType, sAddScope, nAddPos, sAddRole, sAddActState)
         End If
         Exit Sub
     End If
@@ -3299,10 +3485,9 @@ REM ACTIVITY-STATE CATALOG PANEL (COLUMNS M..P)
 REM =========================================================================
 
 REM Opens the activity-state catalog editor.
-Function ManageActivityStates() As Integer
+Sub ManageActivityStates()
     Dim oDialogue As Object
     Dim oData As Object
-    Dim nResult As Integer
 
     DialogLibraries.LoadLibrary("Standard")
     oDialogue = CreateUnoDialog(DialogLibraries.Standard.DialogPanelActState)
@@ -3328,24 +3513,8 @@ Function ManageActivityStates() As Integer
     Call ApplyWatermarks(oDialogue)
 
     oDialogue.Title = "Manage Activity States"
-    nResult = oDialogue.execute()
+    oDialogue.execute()
     oDialogue.dispose()
-    ManageActivityStates = nResult
-End Function
-
-REM Opens the activity-state editor from the item panel.
-Sub OpenActivityStatesPanel(oEvent As Object)
-    Dim nResult As Integer
-
-    On Error Resume Next
-    oEvent.Source.Context.endExecute()
-    On Error GoTo 0
-
-    nResult = ManageActivityStates()
-    If nResult = 0 Then
-        ' Cancel returns to the previous activity panel.
-        Call ManageActivityes()
-    End If
 End Sub
 
 REM Fills CmbItem with the activity-state names (column M).
@@ -3575,6 +3744,9 @@ Sub SaveActStateFromDialog(oEvent As Object)
         Exit Sub
     End If
 
+    ' "active" is a system state: it can be edited but not renamed.
+    If LCase(sText) = "active" Then sNewName = sText
+
     bChanged = False
     If LCase(sNewName) <> LCase(sText) Then bChanged = True
     nRow = FindActStateRow(oData, sText)
@@ -3591,8 +3763,8 @@ Sub SaveActStateFromDialog(oEvent As Object)
             Call ModifyActStateItem(sText, sNewName, sType, sParam, sMessage)
         End If
     Else
-        If ActivityStateIsUsed(sText) Then
-            MsgBox "The activity state """ & sText & """ is assigned to an activity and cannot be deleted.", 48, "Protected Activity State"
+        If LCase(sText) = "active" Then
+            MsgBox "The ""active"" state is a system state and cannot be deleted.", 48, "Protected Activity State"
             Exit Sub
         End If
         answer = MsgBox("Delete the activity state """ & sText & """?", 4 + 16 + 256, "Confirm Deletion")
@@ -3660,12 +3832,24 @@ End Sub
 
 REM Deletes an activity-state entry from columns M..P.
 Sub DeleteActStateItem(sName As String)
-    Dim oData As Object
-    Dim nRow As Long
+    Dim oData As Object, oCursor As Object
+    Dim nRow As Long, i As Long, TotalRows As Long
+
+    If LCase(Trim(sName)) = "active" Then Exit Sub
 
     oData = ThisComponent.Sheets.getByName("data")
     nRow = FindActStateRow(oData, sName)
     If nRow = -1 Then Exit Sub
+
+    ' Reset any activity that currently uses this state back to active.
+    oCursor = oData.createCursor()
+    oCursor.gotoEndOfUsedArea(False)
+    TotalRows = oCursor.RangeAddress.EndRow + 1
+    For i = 1 To TotalRows - 1
+        If LCase(Trim(oData.getCellByPosition(8, i).String)) = LCase(Trim(sName)) Then
+            oData.getCellByPosition(8, i).String = ""
+        End If
+    Next i
 
     oData.getCellByPosition(12, nRow).String = ""
     oData.getCellByPosition(13, nRow).String = ""
