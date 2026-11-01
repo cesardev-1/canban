@@ -148,6 +148,16 @@ def main() -> None:
         view.getCellByPosition(0, 2).String = "Report"
         view.getCellByPosition(1, 2).String = "Meeting"
 
+        # Fix data row heights (disable optimal height).
+        cursor = data.createCursor()
+        cursor.gotoEndOfUsedArea(False)
+        end_row = cursor.RangeAddress.EndRow
+        rows = data.Rows
+        for i in range(0, end_row + 1):
+            row = rows.getByIndex(i)
+            row.OptimalHeight = False
+            row.Height = 450
+
         # 7. Leave the blocked activity selected so the startup service can
         #    switch to an accessible one on the next open.
         provider = doc.getScriptProvider()

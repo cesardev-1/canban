@@ -99,6 +99,20 @@ def main() -> None:
         data.getCellByPosition(14, 1).String = ""
         data.getCellByPosition(15, 1).String = ""
 
+        # Fix data row heights (disable optimal height).
+        rows = data.Rows
+        for i in range(0, total_rows):
+            row = rows.getByIndex(i)
+            row.OptimalHeight = False
+            row.Height = 450
+
+        # Clear the view task area and title.
+        for r in range(3, 303):
+            for c in range(0, 6):
+                view.getCellByPosition(c, r).String = ""
+        view.getCellByPosition(3, 2).String = ""
+        view.getCellByPosition(4, 0).Value = 0
+
         # Default board states.
         view.getCellByPosition(0, 2).String = "In progress"
         view.getCellByPosition(1, 2).String = "To do"

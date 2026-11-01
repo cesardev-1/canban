@@ -23,8 +23,7 @@ This project aims to offer a local, lightweight, customizable, and privacy-orien
 ## Getting Started (Installation)
 1. Download one of the spreadsheet files from this repository:
    - `canban_blank.ods`: empty template for new users.
-   - `canban_trial.ods`: sample data to explore the system.
-   - `canban_test.ods`: development/testing build.
+   - `canban_trial.ods`: sample data to explore the system (also useful for testing new features).
 2. Open the file with LibreOffice Calc.
 3. If a message appears indicating that macros are disabled, refer to the **Macro Security** section below.
 
@@ -50,9 +49,7 @@ For macros to work correctly on your computer:
 
 ## Distributions
 - `canban_blank.ods`: template with only the essential base states and no tasks or activities.
-- `canban_trial.ods`: sample data covering activity states, per-activity states and tasks.
-- `canban_test.ods`: development build (same behavior as the draft) for testing unvalidated changes.
-- `canban.ods`: previous/legacy version.
+- `canban_trial.ods`: sample data covering activity states, per-activity states and tasks. It is also the file to use when testing new features.
 
 ## Migrating from a Previous Version
 Use the Python migration tool to move your data from an older ODS into the

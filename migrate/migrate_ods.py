@@ -46,21 +46,47 @@ LEGACY_ROLES = {
 # XML helpers
 # ---------------------------------------------------------------------------
 def xml_text(fragment: str) -> str:
-    parts = re.findall(r"<text:p[^>]*>(.*?)</text:p>", fragment, re.S)
+    # Expand self-closing paragraphs so blank paragraphs are kept.
+    fragment = re.sub(r"<text:p\b([^>]*)/>", r"<text:p\1></text:p>", fragment)
+    parts = re.findall(r"<text:p\b[^>]*>(.*?)</text:p>", fragment, re.S)
     if not parts:
-        return ""
-    return " ".join(
-        html.unescape(re.sub(r"<[^>]+>", "", p)).strip() for p in parts
-    ).strip()
+        parts = [fragment]
+
+    lines = []
+    for part in parts:
+        # Preserve explicit spaces, tabs and soft line breaks.
+        part = re.sub(
+            r'<text:s\b[^>]*text:c="(\d+)"[^>]*/>',
+            lambda m: " " * int(m.group(1)),
+            part,
+        )
+        part = re.sub(r"<text:s\b[^>]*/>", " ", part)
+        part = re.sub(r"<text:tab\b[^>]*/>", "\t", part)
+        part = re.sub(r"<text:line-break\b[^>]*/>", "\n", part)
+        part = re.sub(r"<[^>]+>", "", part)
+        lines.append(html.unescape(part))
+    return "\n".join(lines)
+
+
+def escape_text(line: str) -> str:
+    text = html.escape(line, quote=False)
+    return text.replace("\t", "<text:tab/>")
 
 
 def cell_xml(value: str) -> str:
     if value == "":
         return "<table:table-cell/>"
+    value = value.replace("\r\n", "\n").replace("\r", "\n")
+    lines = value.split("\n")
+    body = []
+    for line in lines:
+        if line == "":
+            body.append("<text:p/>")
+        else:
+            body.append("<text:p>%s</text:p>" % escape_text(line))
     return (
         '<table:table-cell office:value-type="string" '
-        'calcext:value-type="string"><text:p>%s</text:p></table:table-cell>'
-        % html.escape(value, quote=False)
+        'calcext:value-type="string">%s</table:table-cell>' % "".join(body)
     )
 
 
@@ -191,7 +217,7 @@ def build_data_table(prefix: str, data: dict) -> str:
     out = [prefix]
 
     # Header row.
-    header = ["<table:table-row>"]
+    header = ['<table:table-row table:style-name="ro1">']
     for value in HEADERS:
         header.append(cell_xml(value))
     header.append(
@@ -226,12 +252,14 @@ def build_data_table(prefix: str, data: dict) -> str:
         cells.append(
             '<table:table-cell table:number-columns-repeated="%d"/>' % (16384 - len(cells))
         )
-        out.append("<table:table-row>%s</table:table-row>" % "".join(cells))
+        out.append(
+            '<table:table-row table:style-name="ro1">%s</table:table-row>' % "".join(cells)
+        )
 
     remaining = 1048576 - (1 + n)
     if remaining > 0:
         out.append(
-            '<table:table-row table:number-rows-repeated="%d">'
+            '<table:table-row table:style-name="ro1" table:number-rows-repeated="%d">'
             '<table:table-cell table:number-columns-repeated="16384"/>'
             "</table:table-row>" % remaining
         )
