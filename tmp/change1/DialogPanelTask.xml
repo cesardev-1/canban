@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dlg:window PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "dialog.dtd">
+<dlg:window xmlns:dlg="http://openoffice.org/2000/dialog" xmlns:script="http://openoffice.org/2000/script" dlg:id="DialogPanelTask" dlg:left="91" dlg:top="6" dlg:width="220" dlg:height="225" dlg:closeable="true" dlg:moveable="true">
+ <dlg:styles>
+  <dlg:style dlg:style-id="0" dlg:font-height="14"/>
+  <dlg:style dlg:style-id="1" dlg:background-color="0xd31f1f" dlg:font-height="20"/>
+  <dlg:style dlg:style-id="2" dlg:font-height="18"/>
+ </dlg:styles>
+ <dlg:bulletinboard>
+  <dlg:combobox dlg:id="CmbState" dlg:tab-index="4" dlg:left="8" dlg:top="3" dlg:width="38" dlg:height="16" dlg:spin="true"/>
+  <dlg:combobox dlg:id="NumPosition" dlg:tab-index="6" dlg:left="99" dlg:top="5" dlg:width="38" dlg:height="16" dlg:spin="true"/>
+  <dlg:combobox dlg:id="CmbActivity" dlg:tab-index="5" dlg:left="153" dlg:top="5" dlg:width="38" dlg:height="16" dlg:spin="true">
+   <script:event script:event-name="on-textchange" script:macro-name="vnd.sun.star.script:Standard.Module1.CmbActivityChanged?language=Basic&amp;location=document" script:language="Script"/>
+  </dlg:combobox>
+  <dlg:textfield dlg:id="TxtTitle" dlg:tab-index="3" dlg:left="4" dlg:top="27" dlg:width="157" dlg:height="18"/>
+  <dlg:textfield dlg:style-id="0" dlg:id="TxtDescription" dlg:tab-index="2" dlg:left="3" dlg:top="49" dlg:width="214" dlg:height="153" dlg:vscroll="true" dlg:multiline="true"/>
+  <dlg:button dlg:style-id="1" dlg:id="BtnDelete" dlg:tab-index="7" dlg:left="4" dlg:top="207" dlg:width="20" dlg:height="16" dlg:value="⮿">
+   <script:event script:event-name="on-performaction" script:macro-name="vnd.sun.star.script:Standard.Module1.DeleteActiveTask?language=Basic&amp;location=document" script:language="Script"/>
+  </dlg:button>
+  <dlg:button dlg:style-id="2" dlg:id="BtnTrash" dlg:tab-index="8" dlg:left="103" dlg:top="207" dlg:width="18" dlg:height="14" dlg:value="♼">
+   <script:event script:event-name="on-performaction" script:macro-name="vnd.sun.star.script:Standard.Module1.MoveTaskToTrash?language=Basic&amp;location=document" script:language="Script"/>
+  </dlg:button>
+  <dlg:button dlg:id="BtnCancel" dlg:tab-index="1" dlg:left="130" dlg:top="205" dlg:width="38" dlg:height="16" dlg:value="Cancel" dlg:button-type="cancel"/>
+  <dlg:button dlg:id="BtnAccept" dlg:tab-index="0" dlg:left="174" dlg:top="205" dlg:width="38" dlg:height="16" dlg:value="~Accept" dlg:button-type="ok"/>
+ </dlg:bulletinboard>
+</dlg:window>
